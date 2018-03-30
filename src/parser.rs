@@ -13,85 +13,81 @@ pub fn parse(tokens: &[Token]) -> Result<ast::Program> {
 }
 
 fn expect(tokens: &mut Tokens, expected: &Token) -> Result<()> {
-    let result = match tokens.peek() {
-        Some(&actual) if actual == expected => Ok(()),
-        actual => Err(format!("Expected {:?}, found {:?}", expected, actual)),
-    };
-
-    if result.is_ok() {
-        tokens.next();
+    match tokens.next() {
+        Some(found) if expected == found => Ok(()),
+        found => Err(format!("Expected {:?}, found {:?}", expected, found)),
     }
-    result
 }
 
 fn program(tokens: &mut Tokens) -> Result<ast::Program> {
     let mut result = Vec::new();
-    while let Ok(e) = expression(tokens) {
-        result.push(e);
+
+    while let Some(_) = tokens.peek() {
+        match expression(tokens) {
+            Ok(expression) => result.push(expression),
+            Err(e) => return Err(e),
+        }
     }
 
-    match tokens.peek() {
-        None => Ok(result),
-        Some(c) => Err(format!("Expected EOF, found {:?}", c)),
-    }
+    Ok(result)
 }
 
 fn expression(tokens: &mut Tokens) -> Result<ast::Expression> {
-    let result = symbol(tokens).map(ast::Expression::Symbol);
-    if result.is_ok() {
-        result
+    if let Some(&token) = tokens.peek() {
+        match token {
+            &Token::Symbol(_) => symbol(tokens).map(ast::Expression::Symbol),
+            &Token::LeftBracket => list(tokens),
+            found => Err(format!("Expected Symbol or '(', found {:?}", found)),
+        }
     } else {
-        list(tokens)
+        Err("Expected Symbol or '(', found None".to_string())
+    }
+}
+
+fn symbol(tokens: &mut Tokens) -> Result<ast::Symbol> {
+    match tokens.next() {
+        Some(&Token::Symbol(ref symbol)) => Ok(ast::Symbol(symbol.to_string())),
+        token => Err(format!("Expected Symbol, found {:?}", token)),
     }
 }
 
 fn list(tokens: &mut Tokens) -> Result<ast::Expression> {
     expect(tokens, &Token::LeftBracket)?;
 
-    let result = function(tokens)
-        .map(ast::Expression::Function)
-        .or_else(|_| application(tokens).map(ast::Expression::Application))?;
+    let result = if let Some(&token) = tokens.peek() {
+        match token {
+            &Token::Lambda => function(tokens).map(ast::Expression::Function),
+            &Token::Symbol(_) | &Token::LeftBracket => {
+                application(tokens).map(ast::Expression::Application)
+            }
+            found => Err(format!("Expected '\\', Symbol or '(', found {:?}", found)),
+        }
+    } else {
+        Err("Expected '\\' or Symbol, found EOF".to_string())
+    }?;
 
     expect(tokens, &Token::RightBracket)?;
     Ok(result)
 }
 
-fn symbol(tokens: &mut Tokens) -> Result<ast::Symbol> {
-    let result = match tokens.peek() {
-        Some(&&Token::Symbol(ref symbol)) => Ok(ast::Symbol(symbol.to_string())),
-        token => Err(format!("Expected Symbol, found {:?}", token)),
-    };
-
-    if result.is_ok() {
-        tokens.next();
-    }
-    result
-}
-
 fn function(tokens: &mut Tokens) -> Result<ast::Function> {
     expect(tokens, &Token::Lambda)?;
 
-    let parameter = symbol(tokens);
-    let body = expression(tokens);
+    let parameter = symbol(tokens)?;
+    let body = expression(tokens)?;
 
-    match (parameter, body) {
-        (Ok(parameter), Ok(body)) => Ok(ast::Function {
-            parameter,
-            body: box body,
-        }),
-        _ => Err(format!("hoge")),
-    }
+    Ok(ast::Function {
+        parameter,
+        body: box body,
+    })
 }
 
 fn application(tokens: &mut Tokens) -> Result<ast::Application> {
-    let callee = expression(tokens);
-    let argument = expression(tokens);
+    let callee = expression(tokens)?;
+    let argument = expression(tokens)?;
 
-    match (callee, argument) {
-        (Ok(callee), Ok(argument)) => Ok(ast::Application {
-            callee: box callee,
-            argument: box argument,
-        }),
-        _ => Err(format!("fuga")),
-    }
+    Ok(ast::Application {
+        callee: box callee,
+        argument: box argument,
+    })
 }
