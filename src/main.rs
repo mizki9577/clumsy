@@ -6,21 +6,18 @@ mod ast;
 mod lexer;
 mod parser;
 
-static PROMPT: &'static str = ">>> ";
+static PROMPT: &str = ">>> ";
 
 fn main() {
     let mut rl = rustyline::Editor::<()>::new();
     while let Ok(source) = rl.readline(PROMPT) {
-        eval(&source);
+        let result = eval(&source);
+        println!("{}", result);
     }
 }
 
-fn eval(source: &str) {
-    println!("{:?}", source);
-
+fn eval(source: &str) -> String {
     let tokens = lexer::tokenize(source);
-    println!("{:?}", tokens);
-
     let ast = parser::parse(&tokens);
-    println!("{:?}", ast);
+    format!("{:?}", ast)
 }
