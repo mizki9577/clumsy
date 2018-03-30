@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     LeftBracket,
     RightBracket,
@@ -8,28 +8,28 @@ pub enum Token {
 
 pub fn tokenize(source: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
-    let mut symbol = String::new();
-    let chars = source.chars();
+    let mut chars = source.chars().peekable();
 
-    for c in chars {
-        if (c == '(' || c == ')' || c == '\\' || c.is_ascii_whitespace()) && !symbol.is_empty() {
-            tokens.push(Token::Symbol(symbol.clone()));
-            symbol.clear();
+    while let Some(c) = chars.next() {
+        match c {
+            '(' => tokens.push(Token::LeftBracket),
+            ')' => tokens.push(Token::RightBracket),
+            '\\' => tokens.push(Token::Lambda),
+            c if c.is_ascii_whitespace() => (),
+            _ => {
+                let mut symbol = String::new();
+                symbol.push(c);
+                while let Some(&c) = chars.peek() {
+                    if !c.is_ascii_whitespace() && c != '(' && c != ')' && c != '\\' {
+                        symbol.push(c);
+                        chars.next();
+                    } else {
+                        break;
+                    }
+                }
+                tokens.push(Token::Symbol(symbol));
+            }
         }
-
-        if c == '(' {
-            tokens.push(Token::LeftBracket);
-        } else if c == ')' {
-            tokens.push(Token::RightBracket);
-        } else if c == '\\' {
-            tokens.push(Token::Lambda);
-        } else if !c.is_ascii_whitespace() {
-            symbol.push(c);
-        }
-    }
-    if !symbol.is_empty() {
-        tokens.push(Token::Symbol(symbol.clone()));
-        symbol.clear();
     }
 
     tokens
