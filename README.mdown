@@ -1,3 +1,4 @@
 # Clumsy
+[![Build Status](https://travis-ci.org/mizkichan/clumsy.svg?branch=master)](https://travis-ci.org/mizkichan/clumsy)
 
 <!-- vim: set ts=4 sw=4 et: -->
