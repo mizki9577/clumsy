@@ -31,14 +31,10 @@ fn program(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Pr
 }
 
 fn expression(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
-    if let Some(token) = tokens.peek() {
-        match token {
-            Token::Symbol(_) => symbol(tokens).map(ast::Expression::Symbol),
-            Token::LeftBracket => list(tokens),
-            found => Err(format!("Expected Symbol or '(', found {:?}", found)),
-        }
-    } else {
-        Err("Expected Symbol or '(', found None".to_string())
+    match tokens.peek() {
+        Some(Token::Symbol(_)) => symbol(tokens).map(ast::Expression::Symbol),
+        Some(Token::LeftBracket) => list(tokens),
+        found => Err(format!("Expected Symbol or '(', found {:?}", found)),
     }
 }
 
@@ -52,40 +48,30 @@ fn symbol(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Sym
 fn list(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
     expect(tokens, &Token::LeftBracket)?;
 
-    let result = if let Some(token) = tokens.peek() {
-        match token {
-            Token::Lambda => function(tokens).map(ast::Expression::Function),
-            Token::Symbol(_) | Token::LeftBracket => {
-                application(tokens).map(ast::Expression::Application)
-            }
-            found => Err(format!("Expected '\\', Symbol or '(', found {:?}", found)),
+    let result = match tokens.peek() {
+        Some(Token::Lambda) => function(tokens).map(ast::Expression::Function),
+        Some(Token::Symbol(_)) | Some(Token::LeftBracket) => {
+            application(tokens).map(ast::Expression::Application)
         }
-    } else {
-        Err("Expected '\\' or Symbol, found EOF".to_string())
-    }?;
+        found => return Err(format!("Expected '\\', Symbol or '(', found {:?}", found)),
+    };
 
     expect(tokens, &Token::RightBracket)?;
-    Ok(result)
+    result
 }
 
 fn function(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Function> {
     expect(tokens, &Token::Lambda)?;
 
     let parameter = symbol(tokens)?;
-    let body = expression(tokens)?;
+    let body = box expression(tokens)?;
 
-    Ok(ast::Function {
-        parameter,
-        body: box body,
-    })
+    Ok(ast::Function { parameter, body })
 }
 
 fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Application> {
-    let callee = expression(tokens)?;
-    let argument = expression(tokens)?;
+    let callee = box expression(tokens)?;
+    let argument = box expression(tokens)?;
 
-    Ok(ast::Application {
-        callee: box callee,
-        argument: box argument,
-    })
+    Ok(ast::Application { callee, argument })
 }
