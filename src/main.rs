@@ -7,14 +7,22 @@ mod lexer;
 mod parser;
 
 use lexer::Lexer;
+use rustyline::error::ReadlineError;
 
 static PROMPT: &str = ">>> ";
 
 fn main() {
-    let mut rl = rustyline::Editor::<()>::new();
-    while let Ok(source) = rl.readline(PROMPT) {
-        let result = eval(&source);
-        println!("{}", result);
+    let mut rl = rustyline::Editor::<()>::new().history_ignore_dups(true);
+    loop {
+        match rl.readline(PROMPT) {
+            Ok(source) => {
+                rl.add_history_entry(&source);
+                let result = eval(&source);
+                println!("{}", result);
+            }
+            Err(ReadlineError::Eof) => break,
+            Err(error) => println!("{}", error),
+        }
     }
 }
 
