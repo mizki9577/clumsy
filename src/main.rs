@@ -6,6 +6,8 @@ mod ast;
 mod lexer;
 mod parser;
 
+use lexer::Lexer;
+
 static PROMPT: &str = ">>> ";
 
 fn main() {
@@ -17,7 +19,7 @@ fn main() {
 }
 
 fn eval(source: &str) -> String {
-    let tokens = lexer::tokenize(source);
+    let tokens = Lexer::new(source).collect::<Vec<_>>();
     let ast = parser::parse(&tokens);
     format!("{:?}", ast)
 }

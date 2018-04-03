@@ -1,4 +1,7 @@
-#[derive(Debug, PartialEq, Clone)]
+use std::iter::Peekable;
+use std::str::Chars;
+
+#[derive(Debug, PartialEq)]
 pub enum Token {
     LeftBracket,
     RightBracket,
@@ -6,31 +9,41 @@ pub enum Token {
     Symbol(String),
 }
 
-pub fn tokenize(source: &str) -> Vec<Token> {
-    let mut tokens = Vec::new();
-    let mut chars = source.chars().peekable();
+pub struct Lexer<'a> {
+    source: Peekable<Chars<'a>>,
+}
 
-    while let Some(c) = chars.next() {
+impl<'a> Lexer<'a> {
+    pub fn new(source: &'a str) -> Lexer<'a> {
+        Lexer {
+            source: source.chars().peekable(),
+        }
+    }
+}
+
+impl<'a> Iterator for Lexer<'a> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Token> {
+        let c = self.source.next();
         match c {
-            '(' => tokens.push(Token::LeftBracket),
-            ')' => tokens.push(Token::RightBracket),
-            '\\' => tokens.push(Token::Lambda),
-            c if c.is_ascii_whitespace() => (),
-            _ => {
+            None => None,
+            Some('(') => Some(Token::LeftBracket),
+            Some(')') => Some(Token::RightBracket),
+            Some('\\') => Some(Token::Lambda),
+            Some(c) if c.is_ascii_whitespace() => self.next(),
+            Some(c) => {
                 let mut symbol = String::new();
                 symbol.push(c);
-                while let Some(&c) = chars.peek() {
-                    if !c.is_ascii_whitespace() && c != '(' && c != ')' && c != '\\' {
-                        symbol.push(c);
-                        chars.next();
-                    } else {
+                while let Some(&c) = self.source.peek() {
+                    if c.is_ascii_whitespace() || c == '(' || c == ')' || c == '\\' {
                         break;
                     }
+                    symbol.push(c);
+                    self.source.next();
                 }
-                tokens.push(Token::Symbol(symbol));
+                Some(Token::Symbol(symbol))
             }
         }
     }
-
-    tokens
 }
