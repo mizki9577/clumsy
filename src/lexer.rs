@@ -6,6 +6,7 @@ pub enum Token {
     LeftBracket,
     RightBracket,
     Lambda,
+    Dot,
     Symbol(String),
 }
 
@@ -31,12 +32,13 @@ impl<'a> Iterator for Lexer<'a> {
             Some('(') => Some(Token::LeftBracket),
             Some(')') => Some(Token::RightBracket),
             Some('\\') => Some(Token::Lambda),
+            Some('.') => Some(Token::Dot),
             Some(c) if c.is_ascii_whitespace() => self.next(),
             Some(c) => {
                 let mut symbol = String::new();
                 symbol.push(c);
                 while let Some(&c) = self.source.peek() {
-                    if c.is_ascii_whitespace() || c == '(' || c == ')' || c == '\\' {
+                    if c.is_ascii_whitespace() || c == '(' || c == ')' || c == '\\' || c == '.' {
                         break;
                     }
                     symbol.push(c);

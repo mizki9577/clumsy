@@ -32,46 +32,57 @@ fn program(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Pr
 
 fn expression(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
     match tokens.peek() {
-        Some(Token::Symbol(_)) => symbol(tokens).map(ast::Expression::Symbol),
-        Some(Token::LeftBracket) => list(tokens),
+        Some(Token::Lambda) => abstraction(tokens).map(ast::Expression::Abstraction),
+        Some(Token::LeftBracket) | Some(Token::Symbol(_)) => {
+            application(tokens).map(ast::Expression::Application)
+        }
+        found => Err(format!("Expected '\\', '(' or Symbol, found {:?}", found)),
+    }
+}
+
+fn abstraction(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Abstraction> {
+    expect(tokens, &Token::Lambda)?;
+    let variables = variables(tokens)?;
+    expect(tokens, &Token::Dot)?;
+    let expression = box expression(tokens)?;
+    Ok(ast::Abstraction {
+        variables,
+        expression,
+    })
+}
+
+fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Application> {
+    let mut items = Vec::new();
+    while let Some(Token::LeftBracket) | Some(Token::Symbol(_)) = tokens.peek() {
+        items.push(item(tokens)?);
+    }
+    Ok(ast::Application { items })
+}
+
+fn item(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Item> {
+    match tokens.peek() {
+        Some(Token::Symbol(_)) => variable(tokens).map(ast::Item::Variable),
+        Some(Token::LeftBracket) => {
+            expect(tokens, &Token::LeftBracket)?;
+            let result = expression(tokens).map(ast::Item::Expression)?;
+            expect(tokens, &Token::RightBracket)?;
+            Ok(result)
+        }
         found => Err(format!("Expected Symbol or '(', found {:?}", found)),
     }
 }
 
-fn symbol(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Symbol> {
+fn variables(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Variables> {
+    let mut variables = Vec::new();
+    while let Some(Token::Symbol(_)) = tokens.peek() {
+        variables.push(variable(tokens)?);
+    }
+    Ok(variables)
+}
+
+fn variable(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Variable> {
     match tokens.next() {
-        Some(Token::Symbol(ref symbol)) => Ok(ast::Symbol(symbol.to_string())),
+        Some(Token::Symbol(ref symbol)) => Ok(ast::Variable(symbol.to_string())),
         token => Err(format!("Expected Symbol, found {:?}", token)),
     }
-}
-
-fn list(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
-    expect(tokens, &Token::LeftBracket)?;
-
-    let result = match tokens.peek() {
-        Some(Token::Lambda) => function(tokens).map(ast::Expression::Function),
-        Some(Token::Symbol(_)) | Some(Token::LeftBracket) => {
-            application(tokens).map(ast::Expression::Application)
-        }
-        found => return Err(format!("Expected '\\', Symbol or '(', found {:?}", found)),
-    };
-
-    expect(tokens, &Token::RightBracket)?;
-    result
-}
-
-fn function(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Function> {
-    expect(tokens, &Token::Lambda)?;
-
-    let parameter = symbol(tokens)?;
-    let body = box expression(tokens)?;
-
-    Ok(ast::Function { parameter, body })
-}
-
-fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Application> {
-    let callee = box expression(tokens)?;
-    let argument = box expression(tokens)?;
-
-    Ok(ast::Application { callee, argument })
 }

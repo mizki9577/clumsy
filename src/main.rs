@@ -1,4 +1,4 @@
-#![feature(box_syntax, nll)]
+#![feature(box_syntax, nll, if_while_or_patterns)]
 
 extern crate rustyline;
 
