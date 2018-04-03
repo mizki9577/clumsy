@@ -1,4 +1,5 @@
-#![feature(box_syntax, nll, if_while_or_patterns)]
+#![feature(plugin, box_syntax, nll, if_while_or_patterns)]
+#![cfg_attr(test, plugin(clippy))]
 
 extern crate rustyline;
 
