@@ -1,4 +1,4 @@
-#![feature(box_syntax)]
+#![feature(box_syntax, nll)]
 
 extern crate rustyline;
 
@@ -27,7 +27,7 @@ fn main() {
 }
 
 fn eval(source: &str) -> String {
-    let tokens = Lexer::new(source).collect::<Vec<_>>();
-    let ast = parser::parse(&tokens);
+    let tokens = Lexer::new(source);
+    let ast = parser::parse(tokens);
     format!("{:?}", ast)
 }
