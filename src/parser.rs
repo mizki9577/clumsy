@@ -33,10 +33,10 @@ fn program(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Pr
 fn expression(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
     match tokens.peek() {
         Some(Token::Lambda) => abstraction(tokens).map(ast::Expression::Abstraction),
-        Some(Token::LeftBracket) | Some(Token::Symbol(_)) => {
+        Some(Token::LeftBracket) | Some(Token::Variable(_)) => {
             application(tokens).map(ast::Expression::Application)
         }
-        found => Err(format!("Expected '\\', '(' or Symbol, found {:?}", found)),
+        found => Err(format!("Expected '\\', '(' or Variable, found {:?}", found)),
     }
 }
 
@@ -53,7 +53,7 @@ fn abstraction(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast
 
 fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Application> {
     let mut items = Vec::new();
-    while let Some(Token::LeftBracket) | Some(Token::Symbol(_)) = tokens.peek() {
+    while let Some(Token::LeftBracket) | Some(Token::Variable(_)) = tokens.peek() {
         items.push(item(tokens)?);
     }
     Ok(ast::Application { items })
@@ -61,20 +61,20 @@ fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast
 
 fn item(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Item> {
     match tokens.peek() {
-        Some(Token::Symbol(_)) => variable(tokens).map(ast::Item::Variable),
+        Some(Token::Variable(_)) => variable(tokens).map(ast::Item::Variable),
         Some(Token::LeftBracket) => {
             expect(tokens, &Token::LeftBracket)?;
             let result = expression(tokens).map(ast::Item::Expression)?;
             expect(tokens, &Token::RightBracket)?;
             Ok(result)
         }
-        found => Err(format!("Expected Symbol or '(', found {:?}", found)),
+        found => Err(format!("Expected Variable or '(', found {:?}", found)),
     }
 }
 
 fn variables(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Variables> {
     let mut variables = Vec::new();
-    while let Some(Token::Symbol(_)) = tokens.peek() {
+    while let Some(Token::Variable(_)) = tokens.peek() {
         variables.push(variable(tokens)?);
     }
     Ok(variables)
@@ -82,7 +82,7 @@ fn variables(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::
 
 fn variable(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Variable> {
     match tokens.next() {
-        Some(Token::Symbol(ref symbol)) => Ok(ast::Variable(symbol.to_string())),
-        token => Err(format!("Expected Symbol, found {:?}", token)),
+        Some(Token::Variable(ref variable)) => Ok(ast::Variable(variable.to_string())),
+        token => Err(format!("Expected Variable, found {:?}", token)),
     }
 }
