@@ -30,5 +30,5 @@ fn main() {
 fn eval(source: &str) -> String {
     let tokens = Lexer::new(source);
     let ast = parser::parse(tokens);
-    format!("{:?}", ast)
+    format!("{:#?}", ast)
 }
