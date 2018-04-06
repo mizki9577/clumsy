@@ -1,4 +1,5 @@
-use ast;
+mod ast;
+
 use lexer::Token;
 use std::iter::Peekable;
 use std::result;
