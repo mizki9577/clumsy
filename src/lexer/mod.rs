@@ -35,6 +35,13 @@ impl<'a> Iterator for Lexer<'a> {
     type Item = Result;
 
     fn next(&mut self) -> Option<Result> {
+        while let Some(c) = self.source.peek() {
+            if !c.is_ascii_whitespace() {
+                break;
+            }
+            self.source.next();
+        }
+
         let c = self.source.next();
         match c {
             None => None,
@@ -42,7 +49,6 @@ impl<'a> Iterator for Lexer<'a> {
             Some(')') => Some(Ok(Token::RightBracket)),
             Some('\\') => Some(Ok(Token::Lambda)),
             Some('.') => Some(Ok(Token::Dot)),
-            Some(c) if c.is_ascii_whitespace() => self.next(),
             Some(c) if c.is_ascii_alphanumeric() || c == '-' || c == '_' => {
                 let mut word = String::new();
                 word.push(c);

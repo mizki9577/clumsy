@@ -45,3 +45,13 @@ fn it_rejects_invalid_characters() {
         ]
     );
 }
+
+#[test]
+fn it_accepts_and_ignores_very_long_white_spaces() {
+    let mut source = String::new();
+    for _ in 0..100_000 {
+        source.push(' ');
+    }
+    source.push_str("\\x. x");
+    Lexer::new(&source).count();
+}
