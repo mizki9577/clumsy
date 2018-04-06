@@ -35,16 +35,16 @@ impl<'a> Iterator for Lexer<'a> {
             Some('.') => Some(Token::Dot),
             Some(c) if c.is_ascii_whitespace() => self.next(),
             Some(c) => {
-                let mut variable = String::new();
-                variable.push(c);
+                let mut word = String::new();
+                word.push(c);
                 while let Some(&c) = self.source.peek() {
-                    if !c.is_ascii_alphanumeric() || c != '-' || c != '_' {
+                    if !c.is_ascii_alphanumeric() && c != '-' && c != '_' {
                         break;
                     }
-                    variable.push(c);
+                    word.push(c);
                     self.source.next();
                 }
-                Some(Token::Variable(variable))
+                Some(Token::Variable(word))
             }
         }
     }
