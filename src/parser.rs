@@ -19,14 +19,9 @@ fn expect(tokens: &mut Peekable<impl Iterator<Item = Token>>, expected: &Token) 
 
 fn program(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Program> {
     let mut result = Vec::new();
-
     while let Some(_) = tokens.peek() {
-        match expression(tokens) {
-            Ok(expression) => result.push(expression),
-            Err(e) => return Err(e),
-        }
+        result.push(expression(tokens)?);
     }
-
     Ok(result)
 }
 
