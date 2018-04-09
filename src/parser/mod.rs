@@ -33,22 +33,20 @@ fn program(tokens: &mut Peekable<impl Iterator<Item = LexerResult>>) -> Result<a
 
 fn expression(tokens: &mut Peekable<impl Iterator<Item = LexerResult>>) -> Result<ast::Expression> {
     match tokens.peek() {
-        Some(Ok(Token::Lambda)) => abstraction(tokens).map(ast::Expression::Abstraction),
-        Some(Ok(Token::LeftBracket)) | Some(Ok(Token::Variable(_))) => {
-            application(tokens).map(ast::Expression::Application)
-        }
+        Some(Ok(Token::Lambda)) => abstraction(tokens),
+        Some(Ok(Token::LeftBracket)) | Some(Ok(Token::Variable(_))) => application(tokens),
         found => Err(format!("Expected '\\', '(' or Variable, found {:?}", found)),
     }
 }
 
 fn abstraction(
     tokens: &mut Peekable<impl Iterator<Item = LexerResult>>,
-) -> Result<ast::Abstraction> {
+) -> Result<ast::Expression> {
     expect(tokens, &Token::Lambda)?;
     let variables = variables(tokens)?;
     expect(tokens, &Token::Dot)?;
     let expression = box expression(tokens)?;
-    Ok(ast::Abstraction {
+    Ok(ast::Expression::Abstraction {
         variables,
         expression,
     })
@@ -56,12 +54,12 @@ fn abstraction(
 
 fn application(
     tokens: &mut Peekable<impl Iterator<Item = LexerResult>>,
-) -> Result<ast::Application> {
+) -> Result<ast::Expression> {
     let mut items = Vec::new();
     while let Some(Ok(Token::LeftBracket)) | Some(Ok(Token::Variable(_))) = tokens.peek() {
         items.push(item(tokens)?);
     }
-    Ok(ast::Application { items })
+    Ok(ast::Expression::Application { items })
 }
 
 fn item(tokens: &mut Peekable<impl Iterator<Item = LexerResult>>) -> Result<ast::Item> {
