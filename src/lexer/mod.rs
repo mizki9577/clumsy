@@ -2,7 +2,6 @@
 mod tests;
 
 use std::iter::Peekable;
-use std::result;
 use std::str::Chars;
 
 #[derive(Debug, PartialEq)]
@@ -12,12 +11,8 @@ pub enum Token {
     Lambda,
     Dot,
     Variable(String),
+    InvalidCharacter(char),
 }
-
-#[derive(Debug, PartialEq)]
-pub struct InvalidCharacter(char);
-
-pub type Result = result::Result<Token, InvalidCharacter>;
 
 pub struct Lexer<'a> {
     source: Peekable<Chars<'a>>,
@@ -32,9 +27,9 @@ impl<'a> Lexer<'a> {
 }
 
 impl<'a> Iterator for Lexer<'a> {
-    type Item = Result;
+    type Item = Token;
 
-    fn next(&mut self) -> Option<Result> {
+    fn next(&mut self) -> Option<Self::Item> {
         while let Some(c) = self.source.peek() {
             if !c.is_ascii_whitespace() {
                 break;
@@ -45,10 +40,10 @@ impl<'a> Iterator for Lexer<'a> {
         let c = self.source.next();
         match c {
             None => None,
-            Some('(') => Some(Ok(Token::LeftBracket)),
-            Some(')') => Some(Ok(Token::RightBracket)),
-            Some('\\') => Some(Ok(Token::Lambda)),
-            Some('.') => Some(Ok(Token::Dot)),
+            Some('(') => Some(Token::LeftBracket),
+            Some(')') => Some(Token::RightBracket),
+            Some('\\') => Some(Token::Lambda),
+            Some('.') => Some(Token::Dot),
             Some(c) if c.is_ascii_alphanumeric() || c == '-' || c == '_' => {
                 let mut word = String::new();
                 word.push(c);
@@ -59,9 +54,9 @@ impl<'a> Iterator for Lexer<'a> {
                     word.push(c);
                     self.source.next();
                 }
-                Some(Ok(Token::Variable(word)))
+                Some(Token::Variable(word))
             }
-            Some(c) => Some(Err(InvalidCharacter(c))),
+            Some(c) => Some(Token::InvalidCharacter(c)),
         }
     }
 }
