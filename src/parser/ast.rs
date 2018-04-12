@@ -3,21 +3,15 @@ pub type Program = Vec<Expression>;
 #[derive(Debug)]
 pub enum Expression {
     Abstraction {
-        variables: Vec<Variable>,
+        parameter: Variable,
         expression: Box<Expression>,
     },
     Application {
-        items: Vec<Item>,
+        callee: Box<Expression>,
+        argument: Box<Expression>,
     },
-}
-
-#[derive(Debug)]
-pub enum Item {
     Variable(Variable),
-    Expression(Expression),
 }
-
-pub type Variables = Vec<Variable>;
 
 #[derive(Debug)]
 pub struct Variable(pub String);

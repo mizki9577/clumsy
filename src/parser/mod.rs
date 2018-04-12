@@ -1,6 +1,7 @@
 mod ast;
 
 use lexer::Token;
+use std::collections::VecDeque;
 use std::iter::Peekable;
 use std::result;
 
@@ -36,42 +37,58 @@ fn expression(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast:
 
 fn abstraction(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
     expect(tokens, &Token::Lambda)?;
-    let variables = variables(tokens)?;
+
+    let mut variables = VecDeque::new();
+    while let Some(Token::Variable(_)) = tokens.peek() {
+        variables.push_back(variable(tokens)?);
+    }
+
     expect(tokens, &Token::Dot)?;
-    let expression = box expression(tokens)?;
-    Ok(ast::Expression::Abstraction {
-        variables,
-        expression,
-    })
+    let expression = expression(tokens)?;
+    Ok(fix_abstraction(variables, expression))
+}
+
+fn fix_abstraction(
+    mut variables: VecDeque<ast::Variable>,
+    expression: ast::Expression,
+) -> ast::Expression {
+    ast::Expression::Abstraction {
+        parameter: variables.pop_front().expect("Parameter list is empty!"),
+        expression: box if variables.is_empty() {
+            expression
+        } else {
+            fix_abstraction(variables, expression)
+        },
+    }
 }
 
 fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
-    let mut items = Vec::new();
-    while let Some(Token::LeftBracket) | Some(Token::Variable(_)) = tokens.peek() {
-        items.push(item(tokens)?);
+    let mut items = VecDeque::new();
+    loop {
+        items.push_back(match tokens.peek() {
+            Some(Token::Variable(_)) => variable(tokens).map(ast::Expression::Variable)?,
+            Some(Token::LeftBracket) => {
+                expect(tokens, &Token::LeftBracket)?;
+                let result = expression(tokens)?;
+                expect(tokens, &Token::RightBracket)?;
+                result
+            }
+            _ => break,
+        });
     }
-    Ok(ast::Expression::Application { items })
+    Ok(fix_application(items))
 }
 
-fn item(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Item> {
-    match tokens.peek() {
-        Some(Token::Variable(_)) => variable(tokens).map(ast::Item::Variable),
-        Some(Token::LeftBracket) => {
-            expect(tokens, &Token::LeftBracket)?;
-            let result = expression(tokens).map(ast::Item::Expression)?;
-            expect(tokens, &Token::RightBracket)?;
-            Ok(result)
+fn fix_application(mut items: VecDeque<ast::Expression>) -> ast::Expression {
+    let head = items.pop_front().expect("Application list is empty!");
+    if items.is_empty() {
+        head
+    } else {
+        ast::Expression::Application {
+            callee: box head,
+            argument: box fix_application(items),
         }
-        found => Err(format!("Expected Variable or '(', found {:?}", found)),
     }
-}
-
-fn variables(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Variables> {
-    let mut variables = Vec::new();
-    while let Some(Token::Variable(_)) = tokens.peek() {
-        variables.push(variable(tokens)?);
-    }
-    Ok(variables)
 }
 
 fn variable(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Variable> {
