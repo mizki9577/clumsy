@@ -1,6 +1,6 @@
 pub type Program = Vec<Expression>;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Expression {
     Abstraction {
         parameter: Variable,
@@ -13,5 +13,5 @@ pub enum Expression {
     Variable(Variable),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Variable(pub String);
