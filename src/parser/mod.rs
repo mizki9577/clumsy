@@ -80,13 +80,13 @@ fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast
 }
 
 fn fix_application(mut items: VecDeque<ast::Expression>) -> ast::Expression {
-    let head = items.pop_front().expect("Application list is empty!");
+    let last = items.pop_back().expect("Application list is empty!");
     if items.is_empty() {
-        head
+        last
     } else {
         ast::Expression::Application {
-            callee: box head,
-            argument: box fix_application(items),
+            callee: box fix_application(items),
+            argument: box last,
         }
     }
 }
