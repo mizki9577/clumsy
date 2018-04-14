@@ -93,7 +93,7 @@ fn fix_application(mut items: VecDeque<ast::Expression>) -> ast::Expression {
 
 fn variable(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Variable> {
     match tokens.next() {
-        Some(Token::Variable(ref variable)) => Ok(ast::Variable(variable.to_string())),
+        Some(Token::Variable(ref variable)) => Ok(ast::Variable::new(variable)),
         token => Err(format!("Expected Variable, found {:?}", token)),
     }
 }

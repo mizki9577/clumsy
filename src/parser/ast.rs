@@ -15,3 +15,9 @@ pub enum Expression {
 
 #[derive(Debug, PartialEq)]
 pub struct Variable(pub String);
+
+impl Variable {
+    pub fn new(variable: &str) -> Variable {
+        Variable(variable.to_string())
+    }
+}
