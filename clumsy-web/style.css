@@ -1,0 +1,11 @@
+#lorem-ipsum {
+  width: 25%;
+  text-align: justify;
+  margin: 1in auto;
+  font-family: Georgia, serif;
+  font-size: 1em;
+}
+
+#lorem-ipsum::first-letter {
+  font-size: 4em;
+}
