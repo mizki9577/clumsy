@@ -1,11 +1,9 @@
 [package]
-name = "clumsy"
+name = "libclumsy"
 version = "0.1.0"
 authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
 
 [dependencies]
-rustyline = "1.0"
-libclumsy = { path = "./libclumsy" }
 
 [dev-dependencies]
 clippy = "*"
