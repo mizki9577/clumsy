@@ -34,9 +34,26 @@ fn parse_abstraction() {
 #[test]
 fn parse_application() {
     let a = application(&mut Lexer::new("x y z").peekable());
+    let b = application(&mut Lexer::new("((x) y) z").peekable());
     let expected = Ok(new_application(
         new_application(new_variable("x"), new_variable("y")),
         new_variable("z"),
     ));
     assert_eq!(expected, a);
+    assert_eq!(expected, b);
+}
+
+#[test]
+fn parse_fail_abstraction1() {
+    assert!(abstraction(&mut Lexer::new("x").peekable()).is_err());
+}
+
+#[test]
+fn parse_fail_abstraction2() {
+    assert!(abstraction(&mut Lexer::new("\\x").peekable()).is_err());
+}
+
+#[test]
+fn parse_fail_application() {
+    assert!(application(&mut Lexer::new("(x").peekable()).is_err());
 }
