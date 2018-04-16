@@ -44,13 +44,10 @@ fn parse_application() {
 }
 
 #[test]
-fn parse_fail_abstraction1() {
+fn parse_fail_abstraction() {
     assert!(abstraction(&mut Lexer::new("x").peekable()).is_err());
-}
-
-#[test]
-fn parse_fail_abstraction2() {
     assert!(abstraction(&mut Lexer::new("\\x").peekable()).is_err());
+    assert!(abstraction(&mut Lexer::new("\\x (y z). x y z").peekable()).is_err());
 }
 
 #[test]
