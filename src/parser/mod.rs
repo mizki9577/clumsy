@@ -39,29 +39,23 @@ fn expression(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast:
 
 fn abstraction(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
     expect(tokens, &Token::Lambda)?;
-
-    let mut variables = VecDeque::new();
-    while let Some(Token::Variable(_)) = tokens.peek() {
-        variables.push_back(variable(tokens)?);
-    }
-
-    expect(tokens, &Token::Dot)?;
-    let expression = expression(tokens)?;
-    Ok(fix_abstraction(variables, expression))
+    abstraction_body(tokens)
 }
 
-fn fix_abstraction(
-    mut variables: VecDeque<ast::Variable>,
-    expression: ast::Expression,
-) -> ast::Expression {
-    ast::Expression::Abstraction {
-        parameter: variables.pop_front().expect("Parameter list is empty!"),
-        expression: box if variables.is_empty() {
-            expression
-        } else {
-            fix_abstraction(variables, expression)
-        },
-    }
+fn abstraction_body(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
+    let parameter = variable(tokens)?;
+    let expression = box match tokens.peek() {
+        Some(Token::Variable(_)) => abstraction_body(tokens)?,
+        Some(Token::Dot) => {
+            expect(tokens, &Token::Dot)?;
+            expression(tokens)?
+        }
+        found => return Err(format!("Expected '.' or Variable, found {:?}", found)),
+    };
+    Ok(ast::Expression::Abstraction {
+        parameter,
+        expression,
+    })
 }
 
 fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
