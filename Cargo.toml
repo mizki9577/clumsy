@@ -5,7 +5,6 @@ authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
 
 [dependencies]
 rustyline = "1.0"
-libclumsy = { path = "./libclumsy" }
 
 [dev-dependencies]
 clippy = "*"

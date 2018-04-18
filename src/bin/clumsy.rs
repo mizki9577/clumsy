@@ -1,11 +1,11 @@
 #![feature(plugin, box_syntax, nll, if_while_or_patterns)]
 #![cfg_attr(test, plugin(clippy))]
 
-extern crate libclumsy;
+extern crate clumsy;
 extern crate rustyline;
 
-use libclumsy::lexer::Lexer;
-use libclumsy::parser;
+use clumsy::lexer::Lexer;
+use clumsy::parser;
 use rustyline::error::ReadlineError;
 
 static PROMPT: &str = ">>> ";
