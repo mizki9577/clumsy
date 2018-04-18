@@ -1,11 +1,40 @@
+body {
+  font-family: serif;
+  max-width: 8in;
+  margin: auto;
+}
+
 #lorem-ipsum {
-  width: 25%;
-  text-align: justify;
-  margin: 1in auto;
+  background: black;
+  border-radius: 0.125in;
+  border: 0.25in solid black;
+  color: white;
   font-family: Georgia, serif;
-  font-size: 1em;
+  margin: 1in auto auto;
+  max-width: 4in;
+  text-align: justify;
 }
 
 #lorem-ipsum::first-letter {
+  float: left;
   font-size: 4em;
+  font-weight: bold;
+}
+
+.clumsy-web {
+  background: black;
+  border-radius: 0.125in;
+  border: 0.125in solid black;
+  color: white;
+  font-family: monospace;
+}
+
+.prompt {
+  background: black;
+  border: none;
+  color: white;
+  font-family: inherit;
+  font-size: 100%;
+  outline: none;
+  width: 100%
 }
