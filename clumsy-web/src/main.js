@@ -1,26 +1,29 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import clumsy from './clumsy.rs'
+import lib from './lib.rs'
 
 const PROMPT = '>>>\u00A0'
 
 const evaluate = source => {
   const size = source.length + 1  // NOTE: non-ASCII character is not considered
-  const source_ptr = clumsy.alloc(source.length)
-  const source_array = new Int8Array(clumsy.memory.buffer, source_ptr, size)
+  const source_ptr = lib.alloc(source.length)
+  const source_array = new Int8Array(lib.memory.buffer, source_ptr, size)
 
   source_array.set(Array.from(source).map(c => c.charCodeAt(0)))
   source_array[size - 1] = 0  // terminating by null
 
-  const result_ptr = clumsy.eval(source_ptr)
-  const result_array = new Int8Array(clumsy.memory.buffer, result_ptr)
+  const result_ptr = lib.eval(source_ptr)
+  const result_array = new Int8Array(lib.memory.buffer, result_ptr)
 
-  let i = 1
+  let i = 0
   while (result_array[i] != 0) {
     ++i
   }
+  const result = String.fromCodePoint(...result_array.slice(0, i + 1))
 
-  const result = String.fromCodePoint(...result_array.slice(1, i + 1))
+  lib.dealloc(source_ptr, size)
+  lib.free_result(result_ptr)
+
   return result
 }
 
@@ -37,6 +40,14 @@ class ClumsyWeb extends React.Component {
 
   componentDidMount() {
     this.prompt.current.focus()
+  }
+
+  handleClick() {
+    this.prompt.current.focus()
+  }
+
+  componentDidUpdate() {
+    this.prompt.current.scrollIntoView()
   }
 
   handleChange(ev) {
@@ -57,8 +68,8 @@ class ClumsyWeb extends React.Component {
 
   render() {
     return (
-      <div className="clumsy-web">
-        <div>
+      <div className="clumsy-web" onClick={ () => this.handleClick() }>
+        <div style={{ whiteSpace: 'pre' }}>
           { this.state.outputs.map((str, i) => <div key={ i }>{ str }</div>) }
         </div>
         <div style={{ display: 'flex' }}>
