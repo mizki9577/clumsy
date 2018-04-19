@@ -8,7 +8,8 @@
   "private": true,
   "scripts": {
     "start": "parcel serve index.html",
-    "build": "parcel build index.html",
+    "build": "parcel build index.html --public-url /clumsy",
+    "clean": "rm -r dist",
     "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
