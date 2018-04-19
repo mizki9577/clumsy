@@ -27,6 +27,8 @@ body {
   border: 0.125in solid black;
   color: white;
   font-family: monospace;
+  height: 4.5in;
+  overflow-y: scroll;
 }
 
 .prompt {
