@@ -1,4 +1,7 @@
-target/
 **/*.rs.bk
 Cargo.lock
 Session.vim
+target/
+/web/.cache/
+/web/dist/
+/web/node_modules/
