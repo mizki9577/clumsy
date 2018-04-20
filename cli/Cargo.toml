@@ -1,0 +1,17 @@
+[package]
+name = "cli"
+version = "0.1.0"
+authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
+
+[[bin]]
+name = "clumsy"
+path = "src/main.rs"
+
+[dependencies]
+rustyline = "1.0"
+
+[dependencies.clumsy]
+path = "../clumsy"
+
+[dev-dependencies]
+clippy = "*"

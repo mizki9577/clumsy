@@ -1,0 +1,12 @@
+[package]
+name = "web"
+version = "0.1.0"
+authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
+
+[dependencies]
+
+[dependencies.clumsy]
+path = "../clumsy"
+
+[lib]
+crate-type = ["cdylib"]

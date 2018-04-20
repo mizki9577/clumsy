@@ -1,18 +1,6 @@
-[package]
-name = "clumsy"
-version = "0.1.0"
-authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
-
-[[bin]]
-name = "clumsy"
-path = "src/bin/clumsy.rs"
-required-features = ["bin"]
-
-[dependencies]
-rustyline = { version = "1.0", optional = true }
-
-[dev-dependencies]
-clippy = "*"
-
-[features]
-bin = ["rustyline"]
+[workspace]
+members = [
+    "clumsy",
+    "cli",
+]
+exclude = ["web"]
