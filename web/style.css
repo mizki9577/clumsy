@@ -21,22 +21,4 @@ body {
   font-weight: bold;
 }
 
-.clumsy-web {
-  background: black;
-  border-radius: 0.125in;
-  border: 0.125in solid black;
-  color: white;
-  font-family: monospace;
-  height: 4.5in;
-  overflow-y: scroll;
-}
-
-.prompt {
-  background: black;
-  border: none;
-  color: white;
-  font-family: inherit;
-  font-size: 100%;
-  outline: none;
-  width: 100%
-}
+/* vim: set ts=2 sw=2 et: */

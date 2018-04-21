@@ -1,7 +1,36 @@
 import React from 'react'
+import styled from 'styled-components'
 import { evaluate } from './lib.js'
 
 const PROMPT = '>>>\u00A0'
+
+const Root = styled.div `
+  background: black;
+  border-radius: 0.125in;
+  border: 0.125in solid black;
+  color: white;
+  font-family: monospace;
+  height: 4.5in;
+  overflow-y: scroll;
+`
+
+const History = styled.div`
+  white-space: pre;
+`
+
+const FlexContainer = styled.div`
+  display: flex;
+`
+
+const Prompt = styled.input`
+  background: black;
+  border: none;
+  color: white;
+  font-family: inherit;
+  font-size: 100%;
+  outline: none;
+  width: 100%
+`
 
 class ClumsyWeb extends React.Component {
   constructor() {
@@ -15,10 +44,10 @@ class ClumsyWeb extends React.Component {
   }
 
   componentDidMount() {
-    this.prompt.current.focus()
+    this.focusToPrompt()
   }
 
-  handleClick() {
+  focusToPrompt() {
     this.prompt.current.focus()
   }
 
@@ -44,22 +73,15 @@ class ClumsyWeb extends React.Component {
 
   render() {
     return (
-      <div className="clumsy-web" onClick={ () => this.handleClick() }>
-        <div style={{ whiteSpace: 'pre' }}>
-          { this.state.outputs.map((str, i) => <div key={ i }>{ str }</div>) }
-        </div>
-        <div style={{ display: 'flex' }}>
+      <Root onClick={ () => this.focusToPrompt() }>
+        <History>{ this.state.outputs.map((str, i) => <div key={ i }>{ str }</div>) }</History>
+        <FlexContainer>
           <span>{ PROMPT }</span>
-          <input
-            className="prompt"
-            type="text"
-            value={ this.state.input }
-            ref={ this.prompt }
-            onChange={ ev => this.handleChange(ev) }
-            onKeyDown={ ev => this.handleKeyDown(ev) }
-          />
-        </div>
-      </div>
+          <Prompt innerRef={ this.prompt } type="text" value={ this.state.input }
+                  onChange={ ev => this.handleChange(ev) }
+                  onKeyDown={ ev => this.handleKeyDown(ev) } />
+        </FlexContainer>
+      </Root>
     )
   }
 }
