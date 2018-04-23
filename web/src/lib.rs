@@ -4,6 +4,7 @@ extern crate clumsy;
 
 use clumsy::lexer::Lexer;
 use clumsy::parser;
+use clumsy::DeBruijnIndex;
 use std::ffi::{CStr, CString};
 use std::heap::{Alloc, Global, Layout};
 use std::os::raw::{c_char, c_void};
@@ -33,11 +34,10 @@ pub fn eval(ptr: *const c_char) -> *mut c_char {
     unsafe { CStr::from_ptr(ptr) }
         .to_str()
         .ok()
-        .and_then(|source| {
-            let lexer = Lexer::new(source);
-            let ast = parser::parse(lexer);
-            let output = format!("{:#?}", ast);
-            CString::new(output).ok()
+        .and_then(|source| parser::parse(Lexer::new(source)).ok())
+        .and_then(|ref ast| {
+            let dbi = DeBruijnIndex::from_ast(ast);
+            CString::new(format!("{:#?}", dbi)).ok()
         })
         .map(|result| result.into_raw())
         .unwrap_or(ptr::null_mut())
