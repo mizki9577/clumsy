@@ -8,6 +8,7 @@ extern crate rustyline;
 use ansi_term::Color;
 use clumsy::lexer::Lexer;
 use clumsy::parser;
+use clumsy::DeBruijnIndex;
 use rustyline::error::ReadlineError;
 
 static PROMPT: &str = ">>> ";
@@ -33,6 +34,7 @@ fn main() {
 
 fn eval(source: &str) -> Result<String, String> {
     let tokens = Lexer::new(source);
-    let ast = parser::parse(tokens);
-    ast.map(|ast| format!("{:#?}", ast))
+    let ast = parser::parse(tokens)?;
+    let dbi = DeBruijnIndex::from_ast(&ast);
+    Ok(format!("{:#?}", dbi))
 }
