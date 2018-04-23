@@ -20,7 +20,7 @@ export const evaluate = source => {
   while (result_array[i] != 0) {
     ++i
   }
-  const result = td.decode(result_array.slice(0, i + 1))
+  const result = td.decode(result_array.slice(0, i))
 
   lib.dealloc(destination_ptr, destination_size)
   lib.free_result(result_ptr)
