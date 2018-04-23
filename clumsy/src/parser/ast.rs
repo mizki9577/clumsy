@@ -11,7 +11,7 @@ pub enum Expression {
     Variable(Variable),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct Variable(pub String);
 
 impl Variable {
