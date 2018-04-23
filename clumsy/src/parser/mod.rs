@@ -3,7 +3,6 @@ mod ast;
 mod tests;
 
 use lexer::Token;
-use std::collections::VecDeque;
 use std::iter::Peekable;
 use std::result;
 
@@ -59,9 +58,9 @@ fn abstraction_body(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Resul
 }
 
 fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
-    let mut items = VecDeque::new();
+    let mut items = Vec::new();
     loop {
-        items.push_back(match tokens.peek() {
+        items.push(match tokens.peek() {
             Some(Token::Variable(_)) => variable(tokens).map(ast::Expression::Variable)?,
             Some(Token::LeftBracket) => {
                 expect(tokens, &Token::LeftBracket)?;
@@ -75,8 +74,8 @@ fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast
     Ok(fix_application(items))
 }
 
-fn fix_application(mut items: VecDeque<ast::Expression>) -> ast::Expression {
-    let last = items.pop_back().expect("Application list is empty!");
+fn fix_application(mut items: Vec<ast::Expression>) -> ast::Expression {
+    let last = items.pop().expect("Application list is empty!");
     if items.is_empty() {
         last
     } else {
