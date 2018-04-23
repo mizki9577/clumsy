@@ -8,9 +8,9 @@ use std::result;
 
 type Result<T> = result::Result<T, String>;
 
-pub fn parse(tokens: impl Iterator<Item = Token>) -> Result<ast::Program> {
+pub fn parse(tokens: impl Iterator<Item = Token>) -> Result<ast::Expression> {
     let mut tokens = tokens.peekable();
-    program(&mut tokens)
+    expression(&mut tokens)
 }
 
 fn expect(tokens: &mut Peekable<impl Iterator<Item = Token>>, expected: &Token) -> Result<()> {
@@ -18,14 +18,6 @@ fn expect(tokens: &mut Peekable<impl Iterator<Item = Token>>, expected: &Token) 
         Some(ref found) if expected == found => Ok(()),
         found => Err(format!("Expected {:?}, found {:?}", expected, found)),
     }
-}
-
-fn program(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Program> {
-    let mut result = Vec::new();
-    while let Some(_) = tokens.peek() {
-        result.push(expression(tokens)?);
-    }
-    Ok(result)
 }
 
 fn expression(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {

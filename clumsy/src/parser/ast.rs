@@ -1,5 +1,3 @@
-pub type Program = Vec<Expression>;
-
 #[derive(Debug, PartialEq)]
 pub enum Expression {
     Abstraction {
