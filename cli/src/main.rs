@@ -8,7 +8,7 @@ extern crate rustyline;
 use ansi_term::Color;
 use clumsy::lexer::Lexer;
 use clumsy::parser;
-use clumsy::DeBruijnIndex;
+use clumsy::translator::DeBruijnIndex;
 use rustyline::error::ReadlineError;
 
 static PROMPT: &str = ">>> ";
