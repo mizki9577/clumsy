@@ -3,4 +3,4 @@ members = [
     "clumsy",
     "cli",
 ]
-exclude = ["web"]
+exclude = ["docs"]

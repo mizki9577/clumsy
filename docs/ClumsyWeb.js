@@ -1,6 +1,5 @@
 import React from 'react'
 import styled from 'styled-components'
-import { evaluate } from './lib.js'
 
 const PROMPT = '>>>\u00A0'
 
@@ -33,8 +32,8 @@ const Prompt = styled.input`
 `
 
 class ClumsyWeb extends React.Component {
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
 
     this.prompt = React.createRef()
     this.state = {
@@ -66,7 +65,7 @@ class ClumsyWeb extends React.Component {
       const input = ev.target.value
       this.setState({
         input: '',
-        outputs: [...this.state.outputs, PROMPT + input, evaluate(input)]
+        outputs: [...this.state.outputs, PROMPT + input, this.props.wasm.evaluate(input)]
       })
     }
   }
