@@ -1,9 +1,10 @@
 [package]
-name = "web"
+name = "clumsy-web"
 version = "0.1.0"
 authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
 
 [dependencies]
+wasm-bindgen = "0.2"
 
 [dependencies.clumsy]
 path = "../clumsy"
