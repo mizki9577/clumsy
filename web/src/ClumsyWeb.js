@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 const PROMPT = '>>>\u00A0'
 
-const Root = styled.div `
+const Root = styled.div`
   background: black;
   border-radius: 0.125in;
   border: 0.125in solid black;
@@ -28,7 +28,7 @@ const Prompt = styled.input`
   font-family: inherit;
   font-size: 100%;
   outline: none;
-  width: 100%
+  width: 100%;
 `
 
 class ClumsyWeb extends React.Component {
@@ -65,20 +65,30 @@ class ClumsyWeb extends React.Component {
       const input = ev.target.value
       this.setState({
         input: '',
-        outputs: [...this.state.outputs, PROMPT + input, this.props.wasm.evaluate(input)]
+        outputs: [
+          ...this.state.outputs,
+          PROMPT + input,
+          this.props.wasm.evaluate(input),
+        ],
       })
     }
   }
 
   render() {
     return (
-      <Root onClick={ () => this.focusToPrompt() }>
-        <History>{ this.state.outputs.map((str, i) => <div key={ i }>{ str }</div>) }</History>
+      <Root onClick={() => this.focusToPrompt()}>
+        <History>
+          {this.state.outputs.map((str, i) => <div key={i}>{str}</div>)}
+        </History>
         <FlexContainer>
-          <span>{ PROMPT }</span>
-          <Prompt innerRef={ this.prompt } type="text" value={ this.state.input }
-                  onChange={ ev => this.handleChange(ev) }
-                  onKeyDown={ ev => this.handleKeyDown(ev) } />
+          <span>{PROMPT}</span>
+          <Prompt
+            innerRef={this.prompt}
+            type="text"
+            value={this.state.input}
+            onChange={ev => this.handleChange(ev)}
+            onKeyDown={ev => this.handleKeyDown(ev)}
+          />
         </FlexContainer>
       </Root>
     )
