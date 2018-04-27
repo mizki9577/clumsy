@@ -7,13 +7,11 @@
   "license": "BSD-2-Clause",
   "private": true,
   "scripts": {
-    "start":
-      "cargo watch -w ./src/*.rs -s 'yarn build-rust && yarn build-wasm' & webpack-dev-server",
+    "start": "cargo watch -w ./src/*.rs -s 'yarn build-rust && yarn build-wasm' & webpack-dev-server",
     "build": "yarn build-rust && yarn build-wasm && yarn build-js",
     "deploy": "yarn build && yarn gh-pages",
     "build-rust": "cargo build --target wasm32-unknown-unknown",
-    "build-wasm":
-      "wasm-bindgen --out-dir ./src/ ./target/wasm32-unknown-unknown/debug/clumsy_web.wasm",
+    "build-wasm": "wasm-bindgen --out-dir ./src/ ./target/wasm32-unknown-unknown/debug/clumsy_web.wasm",
     "build-js": "webpack",
     "gh-pages": "gh-pages -d ./dist/"
   },
@@ -30,8 +28,7 @@
   },
   "dependencies": {
     "react": "^16.3.1",
-    "react-bash": "^1.6.0",
     "react-dom": "^16.3.1",
-    "styled-components": "^3.2.6"
+    "terminal-in-react": "^4.3.0"
   }
 }

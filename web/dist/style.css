@@ -4,9 +4,15 @@ body {
   margin: auto;
 }
 
+main {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  height: 4.5in;
+}
+
 #lorem-ipsum {
   background: black;
-  border-radius: 0.125in;
   border: 0.25in solid black;
   color: white;
   font-family: Georgia, serif;
