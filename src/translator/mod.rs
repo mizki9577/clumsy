@@ -11,7 +11,10 @@ pub enum DeBruijnIndex {
         callee: Box<DeBruijnIndex>,
         argument: Box<DeBruijnIndex>,
     },
-    Index(Option<usize>),
+    Variable {
+        index: Option<usize>,
+        name: String,
+    },
 }
 
 impl DeBruijnIndex {
@@ -21,11 +24,11 @@ impl DeBruijnIndex {
 
     fn from_ast_impl<'a>(
         expr: &'a ast::Expression,
-        symbol_table: &mut HashMap<&'a ast::Variable, usize>,
+        symbol_table: &mut HashMap<&'a str, usize>,
     ) -> DeBruijnIndex {
         match expr {
             ast::Expression::Abstraction {
-                parameter,
+                parameter: ast::Variable(parameter),
                 expression,
             } => {
                 symbol_table.iter_mut().for_each(|(_, i)| *i += 1);
@@ -41,9 +44,10 @@ impl DeBruijnIndex {
                 let argument = box DeBruijnIndex::from_ast_impl(argument, symbol_table);
                 DeBruijnIndex::Application { callee, argument }
             }
-            ast::Expression::Variable(variable) => {
-                DeBruijnIndex::Index(symbol_table.get(variable).map(|i| *i))
-            }
+            ast::Expression::Variable(ast::Variable(variable)) => DeBruijnIndex::Variable {
+                index: symbol_table.get(variable.as_str()).map(|i| *i),
+                name: variable.to_owned(),
+            },
         }
     }
 }
