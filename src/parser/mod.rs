@@ -8,11 +8,6 @@ use std::result;
 
 type Result<T> = result::Result<T, String>;
 
-pub fn parse(tokens: impl Iterator<Item = Token>) -> Result<ast::Expression> {
-    let mut tokens = tokens.peekable();
-    expression(&mut tokens)
-}
-
 fn expect(tokens: &mut Peekable<impl Iterator<Item = Token>>, expected: &Token) -> Result<()> {
     match tokens.next() {
         Some(ref found) if expected == found => Ok(()),
@@ -20,26 +15,32 @@ fn expect(tokens: &mut Peekable<impl Iterator<Item = Token>>, expected: &Token) 
     }
 }
 
-fn expression(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
+pub fn parse_expression(
+    tokens: &mut Peekable<impl Iterator<Item = Token>>,
+) -> Result<ast::Expression> {
     match tokens.peek() {
-        Some(Token::Lambda) => abstraction(tokens),
-        Some(Token::LeftBracket) | Some(Token::Variable(_)) => application(tokens),
+        Some(Token::Lambda) => parse_abstraction(tokens),
+        Some(Token::LeftBracket) | Some(Token::Variable(_)) => parse_application(tokens),
         found => Err(format!("Expected '\\', '(' or Variable, found {:?}", found)),
     }
 }
 
-fn abstraction(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
+fn parse_abstraction(
+    tokens: &mut Peekable<impl Iterator<Item = Token>>,
+) -> Result<ast::Expression> {
     expect(tokens, &Token::Lambda)?;
-    abstraction_body(tokens)
+    parse_abstraction_body(tokens)
 }
 
-fn abstraction_body(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
-    let parameter = variable(tokens)?;
+fn parse_abstraction_body(
+    tokens: &mut Peekable<impl Iterator<Item = Token>>,
+) -> Result<ast::Expression> {
+    let parameter = parse_variable(tokens)?;
     let expression = box match tokens.peek() {
-        Some(Token::Variable(_)) => abstraction_body(tokens)?,
+        Some(Token::Variable(_)) => parse_abstraction_body(tokens)?,
         Some(Token::Dot) => {
             expect(tokens, &Token::Dot)?;
-            expression(tokens)?
+            parse_expression(tokens)?
         }
         found => return Err(format!("Expected '.' or Variable, found {:?}", found)),
     };
@@ -49,14 +50,16 @@ fn abstraction_body(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Resul
     })
 }
 
-fn application(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Expression> {
+fn parse_application(
+    tokens: &mut Peekable<impl Iterator<Item = Token>>,
+) -> Result<ast::Expression> {
     let mut items = Vec::new();
     loop {
         items.push(match tokens.peek() {
-            Some(Token::Variable(_)) => variable(tokens).map(ast::Expression::Variable)?,
+            Some(Token::Variable(_)) => parse_variable(tokens).map(ast::Expression::Variable)?,
             Some(Token::LeftBracket) => {
                 expect(tokens, &Token::LeftBracket)?;
-                let result = expression(tokens)?;
+                let result = parse_expression(tokens)?;
                 expect(tokens, &Token::RightBracket)?;
                 result
             }
@@ -78,7 +81,7 @@ fn fix_application(mut items: Vec<ast::Expression>) -> ast::Expression {
     }
 }
 
-fn variable(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Variable> {
+fn parse_variable(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Variable> {
     match tokens.next() {
         Some(Token::Variable(ref variable)) => Ok(ast::Variable::new(variable)),
         token => Err(format!("Expected Variable, found {:?}", token)),
