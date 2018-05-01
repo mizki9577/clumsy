@@ -12,6 +12,7 @@ use wasm_bindgen::prelude::*;
 pub fn evaluate(source: &str) -> String {
     format!(
         "{:#?}",
-        parser::parse(Lexer::new(source)).map(|ref ast| DeBruijnIndex::from_ast(ast))
+        parser::parse_expression(&mut Lexer::new(source).peekable())
+            .map(|ref ast| DeBruijnIndex::from_ast(ast))
     )
 }
