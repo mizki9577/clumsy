@@ -1,4 +1,4 @@
-#![feature(plugin, box_syntax, nll, if_while_or_patterns)]
+#![feature(plugin, box_syntax, nll)]
 #![cfg_attr(check, plugin(clippy))]
 
 pub mod lexer;
