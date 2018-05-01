@@ -857,6 +857,20 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.evaluate = evaluate;
+exports.__wbindgen_object_clone_ref = __wbindgen_object_clone_ref;
+exports.__wbindgen_object_drop_ref = __wbindgen_object_drop_ref;
+exports.__wbindgen_string_new = __wbindgen_string_new;
+exports.__wbindgen_number_new = __wbindgen_number_new;
+exports.__wbindgen_number_get = __wbindgen_number_get;
+exports.__wbindgen_undefined_new = __wbindgen_undefined_new;
+exports.__wbindgen_null_new = __wbindgen_null_new;
+exports.__wbindgen_is_null = __wbindgen_is_null;
+exports.__wbindgen_is_undefined = __wbindgen_is_undefined;
+exports.__wbindgen_boolean_new = __wbindgen_boolean_new;
+exports.__wbindgen_boolean_get = __wbindgen_boolean_get;
+exports.__wbindgen_symbol_new = __wbindgen_symbol_new;
+exports.__wbindgen_is_symbol = __wbindgen_is_symbol;
+exports.__wbindgen_string_get = __wbindgen_string_get;
 exports.__wbindgen_throw = __wbindgen_throw;
 
 var wasm = _interopRequireWildcard(__webpack_require__(/*! ./clumsy_web_bg */ "./src/clumsy_web_bg.wasm"));
@@ -941,6 +955,129 @@ function evaluate(arg0) {
   } finally {
     wasm.__wbindgen_free(ptr0, len0 * 1);
   }
+}
+
+var slab = [];
+var slab_next = 0;
+
+function addHeapObject(obj) {
+  if (slab_next === slab.length) slab.push(slab.length + 1);
+  var idx = slab_next;
+  var next = slab[idx];
+  slab_next = next;
+  slab[idx] = {
+    obj: obj,
+    cnt: 1
+  };
+  return idx << 1;
+}
+
+var stack = [];
+
+function getObject(idx) {
+  if ((idx & 1) === 1) {
+    return stack[idx >> 1];
+  } else {
+    var val = slab[idx >> 1];
+    return val.obj;
+  }
+}
+
+function __wbindgen_object_clone_ref(idx) {
+  // If this object is on the stack promote it to the heap.
+  if ((idx & 1) === 1) return addHeapObject(getObject(idx)); // Otherwise if the object is on the heap just bump the
+  // refcount and move on
+
+  var val = slab[idx >> 1];
+  val.cnt += 1;
+  return idx;
+}
+
+function dropRef(idx) {
+  var obj = slab[idx >> 1];
+  obj.cnt -= 1;
+  if (obj.cnt > 0) return; // If we hit 0 then free up our space in the slab
+
+  slab[idx >> 1] = slab_next;
+  slab_next = idx >> 1;
+}
+
+function __wbindgen_object_drop_ref(i) {
+  dropRef(i);
+}
+
+function __wbindgen_string_new(p, l) {
+  return addHeapObject(getStringFromWasm(p, l));
+}
+
+function __wbindgen_number_new(i) {
+  return addHeapObject(i);
+}
+
+function __wbindgen_number_get(n, invalid) {
+  var obj = getObject(n);
+  if (typeof obj === 'number') return obj;
+  getUint8Memory()[invalid] = 1;
+  return 0;
+}
+
+function __wbindgen_undefined_new() {
+  return addHeapObject(undefined);
+}
+
+function __wbindgen_null_new() {
+  return addHeapObject(null);
+}
+
+function __wbindgen_is_null(idx) {
+  return getObject(idx) === null ? 1 : 0;
+}
+
+function __wbindgen_is_undefined(idx) {
+  return getObject(idx) === undefined ? 1 : 0;
+}
+
+function __wbindgen_boolean_new(v) {
+  return addHeapObject(v === 1);
+}
+
+function __wbindgen_boolean_get(i) {
+  var v = getObject(i);
+
+  if (typeof v === 'boolean') {
+    return v ? 1 : 0;
+  } else {
+    return 2;
+  }
+}
+
+function __wbindgen_symbol_new(ptr, len) {
+  var a;
+
+  if (ptr === 0) {
+    a = Symbol();
+  } else {
+    a = Symbol(getStringFromWasm(ptr, len));
+  }
+
+  return addHeapObject(a);
+}
+
+function __wbindgen_is_symbol(i) {
+  return _typeof(getObject(i)) === 'symbol' ? 1 : 0;
+}
+
+function __wbindgen_string_get(i, len_ptr) {
+  var obj = getObject(i);
+  if (typeof obj !== 'string') return 0;
+
+  var _passStringToWasm3 = passStringToWasm(obj),
+      _passStringToWasm4 = _slicedToArray(_passStringToWasm3, 2),
+      ptr = _passStringToWasm4[0],
+      len = _passStringToWasm4[1];
+
+  getUint32Memory()[len_ptr / 4] = len;
+  return ptr;
 }
 
 function __wbindgen_throw(ptr, len) {
