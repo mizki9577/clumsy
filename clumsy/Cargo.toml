@@ -1,7 +1,0 @@
-[package]
-name = "clumsy"
-version = "0.1.1"
-authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
-
-[dev-dependencies]
-clippy = "*"

@@ -1,5 +1,6 @@
 /node_modules/
 /target/
+/Cargo.lock
 /src/clumsy_web.js
 /src/clumsy_web_bg.wasm
 /dist/*.js
