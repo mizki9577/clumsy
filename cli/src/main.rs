@@ -33,8 +33,8 @@ fn main() {
 }
 
 fn eval(source: &str) -> Result<String, String> {
-    let tokens = Lexer::new(source);
-    let ast = parser::parse(tokens)?;
+    let mut tokens = Lexer::new(source).peekable();
+    let ast = parser::parse_expression(&mut tokens)?;
     let dbi = DeBruijnIndex::from_ast(&ast);
     Ok(format!("{:#?}", dbi))
 }
