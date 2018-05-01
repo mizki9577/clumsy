@@ -16,6 +16,6 @@ pub struct Variable(pub String);
 
 impl Variable {
     pub fn new(variable: &str) -> Variable {
-        Variable(variable.to_string())
+        Variable(variable.to_owned())
     }
 }
