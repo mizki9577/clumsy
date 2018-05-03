@@ -1,5 +1,5 @@
 #![feature(plugin)]
-#![cfg_attr(check, plugin(clippy))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
 
 extern crate ansi_term;
 extern crate clumsy;
