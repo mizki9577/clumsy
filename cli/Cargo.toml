@@ -14,5 +14,6 @@ ansi_term = "0.11"
 [dependencies.clumsy]
 path = ".."
 
-[dev-dependencies]
-clippy = "*"
+[dependencies.clippy]
+version = "*"
+optional = true
