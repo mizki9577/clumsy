@@ -6,7 +6,10 @@ use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 pub enum DeBruijnIndex {
-    Abstraction(Box<DeBruijnIndex>),
+    Abstraction {
+        name: String,
+        expression: Box<DeBruijnIndex>,
+    },
     Application {
         callee: Box<DeBruijnIndex>,
         argument: Box<DeBruijnIndex>,
@@ -34,10 +37,10 @@ impl DeBruijnIndex {
                 symbol_table.iter_mut().for_each(|(_, i)| *i += 1);
                 symbol_table.insert(parameter, 0);
 
-                DeBruijnIndex::Abstraction(box DeBruijnIndex::from_ast_impl(
-                    expression,
-                    symbol_table,
-                ))
+                DeBruijnIndex::Abstraction {
+                    name: parameter.to_owned(),
+                    expression: box DeBruijnIndex::from_ast_impl(expression, symbol_table),
+                }
             }
             ast::Expression::Application { callee, argument } => {
                 let callee = box DeBruijnIndex::from_ast_impl(callee, symbol_table);
