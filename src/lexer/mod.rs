@@ -2,19 +2,33 @@
 mod tests;
 mod token;
 
-pub use self::token::Token;
+pub use self::token::{Token, TokenType};
 use std::iter::Peekable;
 use std::str::Chars;
 
 pub struct Lexer<'a> {
     source: Peekable<Chars<'a>>,
+    line: usize,
+    column: usize,
 }
 
 impl<'a> Lexer<'a> {
     pub fn new(source: &'a str) -> Lexer<'a> {
         Lexer {
             source: source.chars().peekable(),
+            line: 0,
+            column: 0,
         }
+    }
+
+    fn source_next(&mut self) -> Option<char> {
+        if let Some('\n') = self.source.peek() {
+            self.line += 1;
+            self.column = 0;
+        } else {
+            self.column += 1;
+        }
+        self.source.next()
     }
 }
 
@@ -26,17 +40,15 @@ impl<'a> Iterator for Lexer<'a> {
             if !c.is_ascii_whitespace() {
                 break;
             }
-            self.source.next();
+            self.source_next();
         }
 
-        let c = self.source.next();
-        match c {
-            None => None,
-            Some('(') => Some(Token::LeftBracket),
-            Some(')') => Some(Token::RightBracket),
-            Some('\\') => Some(Token::Lambda),
-            Some('.') => Some(Token::Dot),
-            Some(c) if c.is_ascii_alphanumeric() || c == '-' || c == '_' => {
+        let token_type = match self.source_next()? {
+            '(' => TokenType::LeftBracket,
+            ')' => TokenType::RightBracket,
+            '\\' => TokenType::Lambda,
+            '.' => TokenType::Dot,
+            c if c.is_ascii_alphanumeric() || c == '-' || c == '_' => {
                 let mut word = String::new();
                 word.push(c);
                 while let Some(&c) = self.source.peek() {
@@ -44,11 +56,13 @@ impl<'a> Iterator for Lexer<'a> {
                         break;
                     }
                     word.push(c);
-                    self.source.next();
+                    self.source_next();
                 }
-                Some(Token::Variable(word))
+                TokenType::Variable(word)
             }
-            Some(c) => Some(Token::InvalidCharacter(c)),
-        }
+            c => TokenType::InvalidCharacter(c),
+        };
+
+        Some(Token::new(token_type, self.line, self.column - 1))
     }
 }

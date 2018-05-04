@@ -2,15 +2,18 @@ pub mod ast;
 #[cfg(test)]
 mod tests;
 
-use lexer::Token;
+use lexer::{Token, TokenType};
 use std::iter::Peekable;
 use std::result;
 
 type Result<T> = result::Result<T, String>;
 
-fn expect(tokens: &mut Peekable<impl Iterator<Item = Token>>, expected: &Token) -> Result<()> {
-    match tokens.next() {
-        Some(ref found) if expected == found => Ok(()),
+fn expect(tokens: &mut Peekable<impl Iterator<Item = Token>>, expected: &TokenType) -> Result<()> {
+    match tokens
+        .next()
+        .ok_or(format!("Expected {:?}, found EOF", expected))?
+    {
+        ref found if expected == &found.token_type => Ok(()),
         found => Err(format!("Expected {:?}, found {:?}", expected, found)),
     }
 }
@@ -18,17 +21,20 @@ fn expect(tokens: &mut Peekable<impl Iterator<Item = Token>>, expected: &Token) 
 pub fn parse_expression(
     tokens: &mut Peekable<impl Iterator<Item = Token>>,
 ) -> Result<ast::Expression> {
-    match tokens.peek() {
-        Some(Token::Lambda) => parse_abstraction(tokens),
-        Some(Token::LeftBracket) | Some(Token::Variable(_)) => parse_application(tokens),
-        found => Err(format!("Expected '\\', '(' or Variable, found {:?}", found)),
+    let token = tokens
+        .peek()
+        .ok_or("Expected '\\', '(' or Variable, found EOF")?;
+    match token.token_type {
+        TokenType::Lambda => parse_abstraction(tokens),
+        TokenType::LeftBracket | TokenType::Variable(_) => parse_application(tokens),
+        _ => Err(format!("Expected '\\', '(' or Variable, found {:?}", token)),
     }
 }
 
 fn parse_abstraction(
     tokens: &mut Peekable<impl Iterator<Item = Token>>,
 ) -> Result<ast::Expression> {
-    expect(tokens, &Token::Lambda)?;
+    expect(tokens, &TokenType::Lambda)?;
     parse_abstraction_body(tokens)
 }
 
@@ -36,13 +42,14 @@ fn parse_abstraction_body(
     tokens: &mut Peekable<impl Iterator<Item = Token>>,
 ) -> Result<ast::Expression> {
     let parameter = parse_variable(tokens)?;
-    let expression = box match tokens.peek() {
-        Some(Token::Variable(_)) => parse_abstraction_body(tokens)?,
-        Some(Token::Dot) => {
-            expect(tokens, &Token::Dot)?;
+    let token = tokens.peek().ok_or("Expected '.' or Variable, found EOF")?;
+    let expression = box match token.token_type {
+        TokenType::Variable(_) => parse_abstraction_body(tokens)?,
+        TokenType::Dot => {
+            expect(tokens, &TokenType::Dot)?;
             parse_expression(tokens)?
         }
-        found => return Err(format!("Expected '.' or Variable, found {:?}", found)),
+        _ => return Err(format!("Expected '.' or Variable, found {:?}", token)),
     };
     Ok(ast::Expression::Abstraction {
         parameter,
@@ -55,16 +62,20 @@ fn parse_application(
 ) -> Result<ast::Expression> {
     let mut items = Vec::new();
     loop {
-        items.push(match tokens.peek() {
-            Some(Token::Variable(_)) => parse_variable(tokens).map(ast::Expression::Variable)?,
-            Some(Token::LeftBracket) => {
-                expect(tokens, &Token::LeftBracket)?;
-                let result = parse_expression(tokens)?;
-                expect(tokens, &Token::RightBracket)?;
-                result
-            }
-            _ => break,
-        });
+        if let Some(token) = tokens.peek() {
+            items.push(match token.token_type {
+                TokenType::Variable(_) => parse_variable(tokens).map(ast::Expression::Variable)?,
+                TokenType::LeftBracket => {
+                    expect(tokens, &TokenType::LeftBracket)?;
+                    let result = parse_expression(tokens)?;
+                    expect(tokens, &TokenType::RightBracket)?;
+                    result
+                }
+                _ => break,
+            });
+        } else {
+            break;
+        }
     }
     Ok(fix_application(items))
 }
@@ -82,8 +93,9 @@ fn fix_application(mut items: Vec<ast::Expression>) -> ast::Expression {
 }
 
 fn parse_variable(tokens: &mut Peekable<impl Iterator<Item = Token>>) -> Result<ast::Variable> {
-    match tokens.next() {
-        Some(Token::Variable(ref variable)) => Ok(ast::Variable::new(variable)),
-        token => Err(format!("Expected Variable, found {:?}", token)),
+    let token = tokens.next().ok_or("Expected Variable, found EOF")?;
+    match token.token_type {
+        TokenType::Variable(ref variable) => Ok(ast::Variable::new(variable)),
+        _ => Err(format!("Expected Variable, found {:?}", token)),
     }
 }
