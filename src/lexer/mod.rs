@@ -1,18 +1,10 @@
 #[cfg(test)]
 mod tests;
+mod token;
 
+pub use self::token::Token;
 use std::iter::Peekable;
 use std::str::Chars;
-
-#[derive(Debug, PartialEq)]
-pub enum Token {
-    LeftBracket,
-    RightBracket,
-    Lambda,
-    Dot,
-    Variable(String),
-    InvalidCharacter(char),
-}
 
 pub struct Lexer<'a> {
     source: Peekable<Chars<'a>>,
