@@ -26,37 +26,31 @@ pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression>
 
 fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
     expect(tokens, TokenType::Lambda)?;
-    parse_abstraction_body(tokens)
+    let variables = parse_variables(tokens)?;
+    expect(tokens, TokenType::Dot)?;
+    let expression = parse_expression(tokens)?;
+    Ok(ast::Expression::new_abstraction(variables, expression))
 }
 
-fn parse_abstraction_body(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
-    let parameter = parse_variable(tokens)?;
-    let token = tokens.peek().unwrap();
-    let expression = box match token.token_type {
-        TokenType::Variable(_) => parse_abstraction_body(tokens)?,
-        TokenType::Dot => {
-            expect(tokens, TokenType::Dot)?;
-            parse_expression(tokens)?
-        }
-        _ => return Err(format!("Expected '.' or Variable, found {}", token)),
-    };
-    Ok(ast::Expression::Abstraction {
-        parameter,
-        expression,
-    })
+fn parse_variables(tokens: &mut Peekable<Lexer>) -> Result<Vec<ast::Variable>> {
+    let mut variables = vec![parse_variable(tokens)?];
+    while let TokenType::Variable(_) = tokens.peek().unwrap().token_type {
+        variables.push(parse_variable(tokens)?);
+    }
+    Ok(variables)
 }
 
 fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
-    let mut items = Vec::new();
+    let mut expressions = Vec::new();
     loop {
         if let Some(token) = tokens.peek() {
-            items.push(match token.token_type {
-                TokenType::Variable(_) => parse_variable(tokens).map(ast::Expression::Variable)?,
+            expressions.push(match token.token_type {
+                TokenType::Variable(_) => ast::Expression::Variable(parse_variable(tokens)?),
                 TokenType::LeftBracket => {
                     expect(tokens, TokenType::LeftBracket)?;
-                    let result = parse_expression(tokens)?;
+                    let expression = parse_expression(tokens)?;
                     expect(tokens, TokenType::RightBracket)?;
-                    result
+                    expression
                 }
                 _ => break,
             });
@@ -64,25 +58,13 @@ fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
             break;
         }
     }
-    Ok(fix_application(items))
-}
-
-fn fix_application(mut items: Vec<ast::Expression>) -> ast::Expression {
-    let last = items.pop().expect("Application list is empty!");
-    if items.is_empty() {
-        last
-    } else {
-        ast::Expression::Application {
-            callee: box fix_application(items),
-            argument: box last,
-        }
-    }
+    Ok(ast::Expression::new_application(expressions))
 }
 
 fn parse_variable(tokens: &mut Peekable<Lexer>) -> Result<ast::Variable> {
     let token = tokens.next().unwrap();
     match token.token_type {
-        TokenType::Variable(ref variable) => Ok(ast::Variable::new(variable)),
+        TokenType::Variable(variable) => Ok(ast::Variable::from(variable)),
         _ => Err(format!("Expected Variable, found {}", token)),
     }
 }

@@ -1,12 +1,11 @@
 #[derive(Debug, PartialEq)]
 pub enum Expression {
     Abstraction {
-        parameter: Variable,
+        variables: Vec<Variable>,
         expression: Box<Expression>,
     },
     Application {
-        callee: Box<Expression>,
-        argument: Box<Expression>,
+        expressions: Vec<Expression>,
     },
     Variable(Variable),
 }
@@ -15,27 +14,27 @@ pub enum Expression {
 pub struct Variable(pub String);
 
 impl Expression {
-    pub fn new_abstraction(parameter: &str, expression: Expression) -> Expression {
+    pub fn new_abstraction(variables: Vec<Variable>, expression: Expression) -> Expression {
         Expression::Abstraction {
-            parameter: Variable::new(parameter),
+            variables,
             expression: box expression,
         }
     }
 
-    pub fn new_application(callee: Expression, argument: Expression) -> Expression {
-        Expression::Application {
-            callee: box callee,
-            argument: box argument,
-        }
+    pub fn new_application(expressions: Vec<Expression>) -> Expression {
+        Expression::Application { expressions }
     }
 
     pub fn new_variable(variable: &str) -> Expression {
-        Expression::Variable(Variable::new(variable))
+        Expression::Variable(Variable::from(variable))
     }
 }
 
-impl Variable {
-    pub fn new(variable: &str) -> Variable {
-        Variable(variable.to_owned())
+impl<T> From<T> for Variable
+where
+    T: Into<String>,
+{
+    fn from(value: T) -> Variable {
+        Variable(value.into())
     }
 }
