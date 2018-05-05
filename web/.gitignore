@@ -2,6 +2,7 @@
 /target/
 /src/clumsy_web.js
 /src/clumsy_web_bg.wasm
+/src/clumsy_web.d.ts
 /dist/*.js
 /dist/*.map
 /dist/*.wasm
