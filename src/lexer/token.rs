@@ -1,3 +1,6 @@
+use std::fmt;
+use std::fmt::{Display, Formatter};
+
 #[derive(Debug, PartialEq)]
 pub struct Token {
     pub token_type: TokenType,
@@ -12,6 +15,7 @@ pub enum TokenType {
     Lambda,
     Dot,
     Variable(String),
+    EOF,
     InvalidCharacter(char),
 }
 
@@ -21,6 +25,26 @@ impl Token {
             token_type,
             line,
             column,
+        }
+    }
+}
+
+impl Display for Token {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{} ({}:{})", self.token_type, self.line, self.column)
+    }
+}
+
+impl Display for TokenType {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            TokenType::LeftBracket => write!(f, "'('"),
+            TokenType::RightBracket => write!(f, "')'"),
+            TokenType::Lambda => write!(f, r"'\'"),
+            TokenType::Dot => write!(f, "'.'"),
+            TokenType::Variable(token) => write!(f, r#""{}""#, token.as_str()),
+            TokenType::EOF => write!(f, "EOF"),
+            TokenType::InvalidCharacter(c) => write!(f, "'{}'", c),
         }
     }
 }

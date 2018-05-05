@@ -43,12 +43,12 @@ impl<'a> Iterator for Lexer<'a> {
             self.source_next();
         }
 
-        let token_type = match self.source_next()? {
-            '(' => TokenType::LeftBracket,
-            ')' => TokenType::RightBracket,
-            '\\' => TokenType::Lambda,
-            '.' => TokenType::Dot,
-            c if c.is_ascii_alphanumeric() || c == '-' || c == '_' => {
+        let token_type = match self.source_next() {
+            Some('(') => TokenType::LeftBracket,
+            Some(')') => TokenType::RightBracket,
+            Some('\\') => TokenType::Lambda,
+            Some('.') => TokenType::Dot,
+            Some(c) if c.is_ascii_alphanumeric() || c == '-' || c == '_' => {
                 let mut word = String::new();
                 word.push(c);
                 while let Some(&c) = self.source.peek() {
@@ -60,7 +60,8 @@ impl<'a> Iterator for Lexer<'a> {
                 }
                 TokenType::Variable(word)
             }
-            c => TokenType::InvalidCharacter(c),
+            Some(c) => TokenType::InvalidCharacter(c),
+            None => TokenType::EOF,
         };
 
         Some(Token::new(token_type, self.line, self.column - 1))
