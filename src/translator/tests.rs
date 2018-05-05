@@ -1,9 +1,12 @@
+use self::ast::*;
 use super::*;
-use utils::*;
 
 #[test]
 fn translate_abstraction() {
-    let a = DeBruijnIndex::from_ast(&new_abstraction("x", new_variable("x")));
+    let a = DeBruijnIndex::from_ast(&Expression::new_abstraction(
+        "x",
+        Expression::new_variable("x"),
+    ));
     let expected = DeBruijnIndex::Abstraction {
         name: "x".to_owned(),
         expression: box DeBruijnIndex::Variable {
