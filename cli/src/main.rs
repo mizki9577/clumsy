@@ -8,7 +8,7 @@ extern crate rustyline;
 use ansi_term::Color;
 use clumsy::lexer::Lexer;
 use clumsy::parser;
-use clumsy::translator::DeBruijnIndex;
+use clumsy::translator::Expression;
 use rustyline::error::ReadlineError;
 
 static PROMPT: &str = ">>> ";
@@ -35,5 +35,5 @@ fn main() {
 fn eval(source: &str) -> Result<String, String> {
     let mut tokens = Lexer::new(source).peekable();
     let ast = parser::parse_expression(&mut tokens)?;
-    Ok(format!("{:#?}", ast))
+    Ok(format!("{:#?}", Expression::from_ast(&ast)))
 }

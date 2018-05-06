@@ -26,18 +26,18 @@ pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression>
 
 fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
     expect(tokens, TokenType::Lambda)?;
-    let variables = parse_variables(tokens)?;
+    let parameters = parse_parameters(tokens)?;
     expect(tokens, TokenType::Dot)?;
     let expression = parse_expression(tokens)?;
-    Ok(ast::Expression::new_abstraction(variables, expression))
+    Ok(ast::Expression::new_abstraction(parameters, expression))
 }
 
-fn parse_variables(tokens: &mut Peekable<Lexer>) -> Result<Vec<ast::Variable>> {
-    let mut variables = vec![parse_variable(tokens)?];
+fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ast::Variable>> {
+    let mut parameters = vec![parse_variable(tokens)?];
     while let TokenType::Variable(_) = tokens.peek().unwrap().token_type {
-        variables.push(parse_variable(tokens)?);
+        parameters.push(parse_variable(tokens)?);
     }
-    Ok(variables)
+    Ok(parameters)
 }
 
 fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {

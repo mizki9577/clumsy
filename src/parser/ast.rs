@@ -1,7 +1,7 @@
 #[derive(Debug, PartialEq)]
 pub enum Expression {
     Abstraction {
-        variables: Vec<Variable>,
+        parameters: Vec<Variable>,
         expression: Box<Expression>,
     },
     Application {
@@ -14,9 +14,9 @@ pub enum Expression {
 pub struct Variable(pub String);
 
 impl Expression {
-    pub fn new_abstraction(variables: Vec<Variable>, expression: Expression) -> Expression {
+    pub fn new_abstraction(parameters: Vec<Variable>, expression: Expression) -> Expression {
         Expression::Abstraction {
-            variables,
+            parameters,
             expression: box expression,
         }
     }

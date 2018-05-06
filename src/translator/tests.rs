@@ -1,15 +1,15 @@
-use self::ast::*;
+use self::ast;
 use super::*;
 
 #[test]
 fn translate_abstraction() {
-    let a = DeBruijnIndex::from_ast(&Expression::new_abstraction(
-        "x",
-        Expression::new_variable("x"),
+    let a = Expression::from_ast(&ast::Expression::new_abstraction(
+        vec![ast::Variable::from("x")],
+        ast::Expression::new_variable("x"),
     ));
-    let expected = DeBruijnIndex::Abstraction {
+    let expected = Expression::Abstraction {
         name: "x".to_owned(),
-        expression: box DeBruijnIndex::Variable {
+        expression: box Expression::Variable {
             index: Some(0),
             name: "x".to_owned(),
         },
