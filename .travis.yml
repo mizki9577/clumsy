@@ -6,7 +6,9 @@ rust:
   - nightly
 
 cache:
-  - cargo
+  cargo: true
+  directories:
+    - $HOME/.rustup
 
 addons:
   apt:
