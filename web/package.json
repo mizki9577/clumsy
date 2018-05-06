@@ -14,7 +14,7 @@
     "build-wasm": "wasm-bindgen --out-dir ./src/ ./target/wasm32-unknown-unknown/debug/clumsy_web.wasm",
     "build-js": "webpack",
     "gh-pages": "gh-pages -d ./dist/",
-    "clean": "rm dist/*.{js,wasm,map}"
+    "clean": "rm -f dist/*.{js,wasm,map}"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.46",

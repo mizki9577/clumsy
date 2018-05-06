@@ -10,9 +10,8 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn evaluate(source: &str) -> String {
-    format!(
-        "{:#?}",
-        parser::parse_expression(&mut Lexer::new(source).peekable())
-            .map(|ref ast| Expression::from_ast(ast))
-    )
+    parser::parse_expression(&mut Lexer::new(source).peekable())
+        .map(|ref ast| (Expression::from_ast(ast)))
+        .map(|result| format!("{}", result))
+        .unwrap_or_else(|err| format!("{}", err))
 }

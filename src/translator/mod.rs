@@ -3,6 +3,8 @@ mod tests;
 
 use parser::ast;
 use std::collections::HashMap;
+use std::fmt;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
@@ -85,6 +87,18 @@ impl Expression {
             Expression::Variable { name, index } => {
                 *index = table.get(name.as_str()).cloned();
             }
+        }
+    }
+}
+
+impl Display for Expression {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Expression::Abstraction { name, expression } => {
+                write!(f, r"(\{}. {})", name, expression)
+            }
+            Expression::Application { callee, argument } => write!(f, r"({} {})", callee, argument),
+            Expression::Variable { name, index: _ } => write!(f, r"{}", name),
         }
     }
 }
