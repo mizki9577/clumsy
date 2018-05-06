@@ -1,7 +1,15 @@
 body {
   font-family: serif;
   max-width: 8in;
-  margin: auto;
+  margin: 0.25in auto;
+}
+
+h1 {
+  margin: 0;
+}
+
+header {
+  margin-bottom: 0.25in;
 }
 
 main {
