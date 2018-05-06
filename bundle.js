@@ -35320,11 +35320,13 @@ function (_React$Component) {
         color: "white",
         prompt: "white",
         startState: "maximised",
-        hideTopBar: true,
         allowTabs: false,
         style: {
           fontFamily: 'monospace',
           fontSize: 'large'
+        },
+        actionHandlers: {
+          handleMaximise: function handleMaximise() {}
         },
         commandPassThrough: function commandPassThrough(input) {
           return _this.handleInput(input.join(' '));
