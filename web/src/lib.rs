@@ -5,7 +5,7 @@ extern crate wasm_bindgen;
 
 use clumsy::lexer::Lexer;
 use clumsy::parser;
-use clumsy::translator::DeBruijnIndex;
+use clumsy::translator::Expression;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -13,6 +13,6 @@ pub fn evaluate(source: &str) -> String {
     format!(
         "{:#?}",
         parser::parse_expression(&mut Lexer::new(source).peekable())
-            .map(|ref ast| DeBruijnIndex::from_ast(ast))
+            .map(|ref ast| Expression::from_ast(ast))
     )
 }
