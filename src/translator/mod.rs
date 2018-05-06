@@ -2,6 +2,7 @@
 mod tests;
 
 use parser::ast;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
@@ -21,7 +22,7 @@ pub enum Expression {
 
 impl Expression {
     pub fn from_ast(expression: &ast::Expression) -> Expression {
-        match expression {
+        let mut result = match expression {
             ast::Expression::Abstraction {
                 parameters,
                 expression,
@@ -30,7 +31,9 @@ impl Expression {
                 Expression::new_application(&expressions)
             }
             ast::Expression::Variable(ast::Variable(name)) => Expression::new_variable(name),
-        }
+        };
+        result.assign_indices();
+        result
     }
 
     fn new_abstraction(parameters: &[ast::Variable], expression: &ast::Expression) -> Expression {
@@ -61,6 +64,27 @@ impl Expression {
         Expression::Variable {
             index: None,
             name: name.to_owned(),
+        }
+    }
+
+    fn assign_indices(&mut self) {
+        self.assign_indices_impl(&mut HashMap::new())
+    }
+
+    fn assign_indices_impl<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
+        match self {
+            Expression::Abstraction { name, expression } => {
+                table.iter_mut().for_each(|(_, i)| *i += 1); // why rustc tells me `i` does not need to be mutable?
+                table.insert(name, 0);
+                expression.assign_indices_impl(table);
+            }
+            Expression::Application { callee, argument } => {
+                callee.assign_indices_impl(table);
+                argument.assign_indices_impl(table);
+            }
+            Expression::Variable { name, index } => {
+                *index = table.get(name.as_str()).cloned();
+            }
         }
     }
 }
