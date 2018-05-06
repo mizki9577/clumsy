@@ -6,7 +6,6 @@ rust:
   - nightly
 
 cache:
-  cargo: true
   directories:
     - $HOME/.rustup
     - $HOME/kcov
