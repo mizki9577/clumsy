@@ -2,17 +2,16 @@
 mod tests;
 
 use parser::ast;
-use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
-pub enum DeBruijnIndex {
+pub enum Expression {
     Abstraction {
         name: String,
-        expression: Box<DeBruijnIndex>,
+        expression: Box<Expression>,
     },
     Application {
-        callee: Box<DeBruijnIndex>,
-        argument: Box<DeBruijnIndex>,
+        callee: Box<Expression>,
+        argument: Box<Expression>,
     },
     Variable {
         index: Option<usize>,
@@ -20,37 +19,48 @@ pub enum DeBruijnIndex {
     },
 }
 
-impl DeBruijnIndex {
-    pub fn from_ast(expr: &ast::Expression) -> DeBruijnIndex {
-        DeBruijnIndex::from_ast_impl(expr, &mut HashMap::new())
+impl Expression {
+    pub fn from_ast(expression: &ast::Expression) -> Expression {
+        match expression {
+            ast::Expression::Abstraction {
+                parameters,
+                expression,
+            } => Expression::new_abstraction(&parameters, expression),
+            ast::Expression::Application { expressions } => {
+                Expression::new_application(&expressions)
+            }
+            ast::Expression::Variable(ast::Variable(name)) => Expression::new_variable(name),
+        }
     }
 
-    fn from_ast_impl<'a>(
-        expr: &'a ast::Expression,
-        symbol_table: &mut HashMap<&'a str, usize>,
-    ) -> DeBruijnIndex {
-        match expr {
-            ast::Expression::Abstraction {
-                parameter: ast::Variable(parameter),
-                expression,
-            } => {
-                symbol_table.iter_mut().for_each(|(_, i)| *i += 1);
-                symbol_table.insert(parameter, 0);
-
-                DeBruijnIndex::Abstraction {
-                    name: parameter.to_owned(),
-                    expression: box DeBruijnIndex::from_ast_impl(expression, symbol_table),
-                }
-            }
-            ast::Expression::Application { callee, argument } => {
-                let callee = box DeBruijnIndex::from_ast_impl(callee, symbol_table);
-                let argument = box DeBruijnIndex::from_ast_impl(argument, symbol_table);
-                DeBruijnIndex::Application { callee, argument }
-            }
-            ast::Expression::Variable(ast::Variable(variable)) => DeBruijnIndex::Variable {
-                index: symbol_table.get(variable.as_str()).map(|i| *i),
-                name: variable.to_owned(),
+    fn new_abstraction(parameters: &[ast::Variable], expression: &ast::Expression) -> Expression {
+        let ast::Variable(name) = &parameters[0];
+        Expression::Abstraction {
+            name: name.to_owned(),
+            expression: box if parameters.len() == 1 {
+                Expression::from_ast(expression)
+            } else {
+                Expression::new_abstraction(&parameters[1..], expression)
             },
+        }
+    }
+
+    fn new_application(expressions: &[ast::Expression]) -> Expression {
+        let argument = expressions.last().unwrap();
+        if expressions.len() == 1 {
+            Expression::from_ast(argument)
+        } else {
+            Expression::Application {
+                callee: box Expression::new_application(&expressions[..expressions.len() - 1]),
+                argument: box Expression::from_ast(argument),
+            }
+        }
+    }
+
+    fn new_variable(name: &str) -> Expression {
+        Expression::Variable {
+            index: None,
+            name: name.to_owned(),
         }
     }
 }
