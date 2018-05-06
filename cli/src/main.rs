@@ -35,5 +35,5 @@ fn main() {
 fn eval(source: &str) -> Result<String, String> {
     let mut tokens = Lexer::new(source).peekable();
     let ast = parser::parse_expression(&mut tokens)?;
-    Ok(format!("{:#?}", Expression::from_ast(&ast)))
+    Ok(format!("{}", Expression::from_ast(&ast)))
 }
