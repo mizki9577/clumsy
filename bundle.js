@@ -37,12 +37,12 @@
 /******/ 		"main": 0
 /******/ 	};
 /******/
+/******/
+/******/
 /******/ 	// script path function
 /******/ 	function jsonpScriptSrc(chunkId) {
 /******/ 		return __webpack_require__.p + "" + chunkId + ".bundle.js"
 /******/ 	}
-/******/
-/******/
 /******/
 /******/ 	// object to store loaded and loading wasm modules
 /******/ 	var installedWasmModules = {};
@@ -137,7 +137,7 @@
 /******/
 /******/ 			// a Promise means "currently loading" or "already loaded".
 /******/ 			promises.push(installedWasmModuleData ||
-/******/ 				(installedWasmModules[wasmModuleId] = fetch(__webpack_require__.p + "" + {"./src/clumsy_web_bg.wasm":"2a298c2edc6724eddd12"}[wasmModuleId] + ".module.wasm").then(function(response) {
+/******/ 				(installedWasmModules[wasmModuleId] = fetch(__webpack_require__.p + "" + {"./src/clumsy_web_bg.wasm":"408b3900f21d1ddef0b7"}[wasmModuleId] + ".module.wasm").then(function(response) {
 /******/ 					if(WebAssembly.compileStreaming) {
 /******/ 						return WebAssembly.compileStreaming(response);
 /******/ 					} else {
@@ -35362,7 +35362,7 @@ var _ClumsyWeb = _interopRequireDefault(__webpack_require__(/*! ./ClumsyWeb.js *
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-__webpack_require__.e(/*! import() */ 0).then(function() { var module = __webpack_require__(/*! ./clumsy_web.js */ "./src/clumsy_web.js"); return typeof module === "object" && module && module.__esModule ? module : Object.assign({/* fake namespace object */}, typeof module === "object" && module, { "default": module }); }).then(function (wasm) {
+Promise.all(/*! import() */[__webpack_require__.e(1), __webpack_require__.e(0)]).then(function() { var module = __webpack_require__(/*! ./clumsy_web.js */ "./src/clumsy_web.js"); return typeof module === "object" && module && module.__esModule ? module : Object.assign({/* fake namespace object */}, typeof module === "object" && module, { "default": module }); }).then(function (wasm) {
   _reactDom.default.render(_react.default.createElement(_ClumsyWeb.default, {
     wasm: wasm
   }), document.querySelector('main'));
