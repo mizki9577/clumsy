@@ -9,6 +9,7 @@ cache:
   cargo: true
   directories:
     - $HOME/.rustup
+    - $HOME/kcov
 
 addons:
   apt:
@@ -20,18 +21,15 @@ addons:
       - gcc
       - binutils-dev
       - libiberty-dev
+      - git
 
 after_success: |
-  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-  tar xzf master.tar.gz &&
-  cd kcov-master &&
-  mkdir build &&
-  cd build &&
-  cmake .. &&
+  git clone https://github.com/SimonKagstrom/kcov.git &&
+  cd kcov &&
+  cmake . &&
   make &&
-  make install DESTDIR=../../kcov-build &&
-  cd ../.. &&
-  rm -rf kcov-master &&
+  make install DESTDIR=../kcov-build &&
+  cd .. &&
   for file in target/debug/clumsy-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib,tests.rs --verify "target/cov/$(basename $file)" "$file"; done &&
   bash <(curl -s https://codecov.io/bash) &&
   echo "Uploaded code coverage"
