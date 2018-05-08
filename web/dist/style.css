@@ -33,6 +33,7 @@ main {
   float: left;
   font-size: 4em;
   font-weight: bold;
+  line-height: 100%;
 }
 
 /* vim: set ts=2 sw=2 et: */
