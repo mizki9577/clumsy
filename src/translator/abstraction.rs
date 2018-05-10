@@ -1,4 +1,6 @@
 use parser::ast;
+use std::fmt;
+use std::fmt::{Display, Formatter};
 use translator::Expression;
 
 #[derive(Debug, PartialEq)]
@@ -35,5 +37,11 @@ impl<'a> From<&'a ast::Abstraction> for Abstraction {
             expression,
         } = value;
         Abstraction::from_ast_impl(parameters, expression)
+    }
+}
+
+impl Display for Abstraction {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, r"(\{}. {})", self.name, self.expression)
     }
 }
