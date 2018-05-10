@@ -251,16 +251,14 @@ function __wbindgen_throw(ptr, len) {
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
 // Instantiate WebAssembly module
-var instance = new WebAssembly.Instance(__webpack_require__.w[module.i], {
-	"./clumsy_web": {
-		"__wbindgen_throw": __webpack_require__("./src/clumsy_web.js")["__wbindgen_throw"]
-	}
-});
-
+var instance = __webpack_require__.w[module.i];
 // export exports from WebAssembly module
 module.exports = instance.exports;
+// exec imports from WebAssembly module (for esm order)
+__webpack_require__(/*! ./clumsy_web */ "./src/clumsy_web.js");
+// exec wasm module
+instance.exports.__webpack_init__()
 
 /***/ })
 
