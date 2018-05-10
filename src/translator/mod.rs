@@ -25,11 +25,11 @@ pub enum Expression {
 impl Expression {
     pub fn from_ast(expression: &ast::Expression) -> Expression {
         let mut result = match expression {
-            ast::Expression::Abstraction {
+            ast::Expression::Abstraction(ast::Abstraction {
                 parameters,
                 expression,
-            } => Expression::new_abstraction(&parameters, expression),
-            ast::Expression::Application { expressions } => {
+            }) => Expression::new_abstraction(&parameters, expression),
+            ast::Expression::Application(ast::Application { expressions }) => {
                 Expression::new_application(&expressions)
             }
             ast::Expression::Variable(ast::Variable(name)) => Expression::new_variable(name),

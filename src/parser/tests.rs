@@ -4,20 +4,22 @@ use super::*;
 #[test]
 fn abstraction() {
     let result = parse_abstraction(&mut Lexer::new("\\x y. x").peekable());
-    let expected = Ok(Expression::new_abstraction(
+    let expected = Ok(Expression::Abstraction(Abstraction::new(
         vec![Variable::from("x"), Variable::from("y")],
-        Expression::new_application(vec![Expression::new_variable("x")]),
-    ));
+        Expression::Application(Application::new(vec![Expression::Variable(
+            Variable::from("x"),
+        )])),
+    )));
     assert_eq!(expected, result);
 }
 
 #[test]
 fn application() {
     let result = parse_application(&mut Lexer::new("x y z").peekable());
-    let expected = Ok(Expression::new_application(vec![
-        Expression::new_variable("x"),
-        Expression::new_variable("y"),
-        Expression::new_variable("z"),
-    ]));
+    let expected = Ok(Expression::Application(Application::new(vec![
+        Expression::Variable(Variable::from("x")),
+        Expression::Variable(Variable::from("y")),
+        Expression::Variable(Variable::from("z")),
+    ])));
     assert_eq!(expected, result);
 }
