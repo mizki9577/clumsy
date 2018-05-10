@@ -1,6 +1,6 @@
 [package]
 name = "clumsy"
-version = "0.1.1"
+version = "0.1.0"
 authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
 
 [dependencies.clippy]
