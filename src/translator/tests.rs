@@ -1,5 +1,5 @@
-use self::ast;
 use super::*;
+use parser::ast;
 
 #[test]
 fn translate_abstraction() {
