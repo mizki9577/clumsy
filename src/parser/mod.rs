@@ -52,6 +52,7 @@ fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
                     expect(tokens, TokenType::RightBracket)?;
                     expression
                 }
+                TokenType::Lambda => parse_abstraction(tokens)?,
                 _ => break,
             });
         } else {
