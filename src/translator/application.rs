@@ -1,3 +1,5 @@
+use std::fmt;
+use std::fmt::{Display, Formatter};
 use translator::Expression;
 
 #[derive(Debug, PartialEq)]
@@ -12,5 +14,11 @@ impl Application {
             callee: box callee,
             argument: box argument,
         }
+    }
+}
+
+impl Display for Application {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, r"({} {})", self.callee, self.argument)
     }
 }

@@ -89,13 +89,9 @@ impl From<Variable> for Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Expression::Abstraction(Abstraction { name, expression }) => {
-                write!(f, r"(\{}. {})", name, expression)
-            }
-            Expression::Application(Application { callee, argument }) => {
-                write!(f, r"({} {})", callee, argument)
-            }
-            Expression::Variable(Variable { name, index: _ }) => write!(f, r"{}", name),
+            Expression::Abstraction(abstraction) => abstraction.fmt(f),
+            Expression::Application(application) => application.fmt(f),
+            Expression::Variable(variable) => variable.fmt(f),
         }
     }
 }
