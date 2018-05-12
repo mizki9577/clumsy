@@ -28,7 +28,16 @@ const Input = styled.input.attrs({ type: 'text' })`
   background-color: black;
   border: none;
   outline: none;
+  padding: 0;
+  flex-grow: 1;
 `
+
+const Editor = ({ prompt, ...props }) => (
+  <div style={{ display: 'flex' }}>
+    <span>{prompt}</span>
+    <Input {...props} />
+  </div>
+)
 
 class Terminal extends React.Component {
   constructor(props = { prompt: '> ' }) {
@@ -103,11 +112,11 @@ class Terminal extends React.Component {
         }}
       >
         {this.state.stdout.map((line, i) => <div key={i}>{line}</div>)}
-        {this.state.ready ? this.props.prompt : null}
-        <Input
+        <Editor
           innerRef={x => {
             this.input = x
           }}
+          prompt={this.state.ready ? this.props.prompt : null}
           value={this.state.history[0]}
           onKeyDown={ev => this.handleKeyDown(ev)}
           onChange={ev => this.handleChange(ev)}
