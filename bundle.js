@@ -37702,7 +37702,7 @@ var _macOs = __webpack_require__(/*! react-desktop/macOs */ "./node_modules/reac
 var _styledComponents = _interopRequireDefault(__webpack_require__(/*! styled-components */ "./node_modules/styled-components/dist/styled-components.browser.es.js"));
 
 var _templateObject = /*#__PURE__*/ _taggedTemplateLiteral(["\n  width: 100%;\n  height: 4.5in;\n  overflow-y: scroll;\n  font-family: monospace;\n  font-size: 12pt;\n  color: white;\n  background-color: black;\n  white-space: pre-wrap;\n  word-break: break-all;\n"]),
-    _templateObject2 = /*#__PURE__*/ _taggedTemplateLiteral(["\n  font-family: monospace;\n  font-size: 12pt;\n  color: white;\n  background-color: black;\n  border: none;\n  outline: none;\n"]);
+    _templateObject2 = /*#__PURE__*/ _taggedTemplateLiteral(["\n  font-family: monospace;\n  font-size: 12pt;\n  color: white;\n  background-color: black;\n  border: none;\n  outline: none;\n  padding: 0;\n  flex-grow: 1;\n"]);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -37732,6 +37732,8 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.getPrototypeOf || function _getPrototypeOf(o) { return o.__proto__; }; return _getPrototypeOf(o); }
 
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
 function _taggedTemplateLiteral(strings, raw) { if (!raw) { raw = strings.slice(0); } return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
 
 var ClumsyWeb = function ClumsyWeb() {
@@ -37755,6 +37757,17 @@ var Wrapper = _styledComponents.default.div(_templateObject);
 var Input = _styledComponents.default.input.attrs({
   type: 'text'
 })(_templateObject2);
+
+var Editor = function Editor(_ref) {
+  var prompt = _ref.prompt,
+      props = _objectWithoutProperties(_ref, ["prompt"]);
+
+  return _react.default.createElement("div", {
+    style: {
+      display: 'flex'
+    }
+  }, _react.default.createElement("span", null, prompt), _react.default.createElement(Input, props));
+};
 
 var Terminal =
 /*#__PURE__*/
@@ -37825,7 +37838,7 @@ function (_React$Component) {
 
         case 'ArrowDown':
           historyIndex = Math.max(0, historyIndex - 1);
-          history = [history[nextHistoryIndex]].concat(_toConsumableArray(history.slice(1)));
+          history = [history[historyIndex]].concat(_toConsumableArray(history.slice(1)));
           break;
 
         default:
@@ -37859,10 +37872,11 @@ function (_React$Component) {
         return _react.default.createElement("div", {
           key: i
         }, line);
-      }), this.state.ready ? this.props.prompt : null, _react.default.createElement(Input, {
+      }), _react.default.createElement(Editor, {
         innerRef: function innerRef(x) {
           _this3.input = x;
         },
+        prompt: this.state.ready ? this.props.prompt : null,
         value: this.state.history[0],
         onKeyDown: function onKeyDown(ev) {
           return _this3.handleKeyDown(ev);
