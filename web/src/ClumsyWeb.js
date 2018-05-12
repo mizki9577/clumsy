@@ -78,7 +78,7 @@ class Terminal extends React.Component {
 
       case 'ArrowDown':
         historyIndex = Math.max(0, historyIndex - 1)
-        history = [history[nextHistoryIndex], ...history.slice(1)]
+        history = [history[historyIndex], ...history.slice(1)]
         break
 
       default:
