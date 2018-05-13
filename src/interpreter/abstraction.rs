@@ -1,7 +1,7 @@
+use interpreter::Expression;
 use parser::ast;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use translator::Expression;
 
 #[derive(Debug, PartialEq)]
 pub struct Abstraction {
