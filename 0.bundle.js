@@ -46,11 +46,11 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
 var TextEncoder = (typeof self === "undefined" ? "undefined" : _typeof(self)) === 'object' && self.TextEncoder ? self.TextEncoder : __webpack_require__(/*! util */ "./node_modules/util/util.js").TextEncoder;
 var cachedEncoder = new TextEncoder('utf-8');
-var cachedUint8Memory = null;
+var cachegetUint8Memory = null;
 
 function getUint8Memory() {
-  if (cachedUint8Memory === null || cachedUint8Memory.buffer !== wasm.memory.buffer) cachedUint8Memory = new Uint8Array(wasm.memory.buffer);
-  return cachedUint8Memory;
+  if (cachegetUint8Memory === null || cachegetUint8Memory.buffer !== wasm.memory.buffer) cachegetUint8Memory = new Uint8Array(wasm.memory.buffer);
+  return cachegetUint8Memory;
 }
 
 function passStringToWasm(arg) {
@@ -62,11 +62,11 @@ function passStringToWasm(arg) {
   return [ptr, buf.length];
 }
 
-var cachedUint32Memory = null;
+var TextDecoder = (typeof self === "undefined" ? "undefined" : _typeof(self)) === 'object' && self.TextDecoder ? self.TextDecoder : __webpack_require__(/*! util */ "./node_modules/util/util.js").TextDecoder;
+var cachedDecoder = new TextDecoder('utf-8');
 
-function getUint32Memory() {
-  if (cachedUint32Memory === null || cachedUint32Memory.buffer !== wasm.memory.buffer) cachedUint32Memory = new Uint32Array(wasm.memory.buffer);
-  return cachedUint32Memory;
+function getStringFromWasm(ptr, len) {
+  return cachedDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
 }
 
 var cachedGlobalArgumentPtr = null;
@@ -76,21 +76,11 @@ function globalArgumentPtr() {
   return cachedGlobalArgumentPtr;
 }
 
-function setGlobalArgument(arg, i) {
-  var idx = globalArgumentPtr() / 4 + i;
-  getUint32Memory()[idx] = arg;
-}
+var cachegetUint32Memory = null;
 
-var TextDecoder = (typeof self === "undefined" ? "undefined" : _typeof(self)) === 'object' && self.TextDecoder ? self.TextDecoder : __webpack_require__(/*! util */ "./node_modules/util/util.js").TextDecoder;
-var cachedDecoder = new TextDecoder('utf-8');
-
-function getStringFromWasm(ptr, len) {
-  return cachedDecoder.decode(getUint8Memory().slice(ptr, ptr + len));
-}
-
-function getGlobalArgument(arg) {
-  var idx = globalArgumentPtr() / 4 + arg;
-  return getUint32Memory()[idx];
+function getUint32Memory() {
+  if (cachegetUint32Memory === null || cachegetUint32Memory.buffer !== wasm.memory.buffer) cachegetUint32Memory = new Uint32Array(wasm.memory.buffer);
+  return cachegetUint32Memory;
 }
 
 function evaluate(arg0) {
@@ -99,14 +89,16 @@ function evaluate(arg0) {
       ptr0 = _passStringToWasm2[0],
       len0 = _passStringToWasm2[1];
 
-  setGlobalArgument(len0, 0);
+  var retptr = globalArgumentPtr();
 
   try {
-    var ret = wasm.evaluate(ptr0);
-    var len = getGlobalArgument(0);
-    var realRet = getStringFromWasm(ret, len);
+    wasm.evaluate(retptr, ptr0, len0);
+    var mem = getUint32Memory();
+    var ptr = mem[retptr / 4];
+    var len = mem[retptr / 4 + 1];
+    var realRet = getStringFromWasm(ptr, len);
 
-    wasm.__wbindgen_free(ret, len * 1);
+    wasm.__wbindgen_free(ptr, len * 1);
 
     return realRet;
   } finally {
