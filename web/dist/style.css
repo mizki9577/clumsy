@@ -8,21 +8,4 @@ main {
   margin: 0.5in auto;
 }
 
-#lorem-ipsum {
-  background: black;
-  padding: 0.25in;
-  color: white;
-  font-family: Georgia, serif;
-  margin: 1in auto auto;
-  max-width: 4in;
-  text-align: justify;
-}
-
-#lorem-ipsum::first-letter {
-  float: left;
-  font-size: 4em;
-  font-weight: bold;
-  line-height: 100%;
-}
-
 /* vim: set ts=2 sw=2 et: */
