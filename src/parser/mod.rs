@@ -1,6 +1,7 @@
-pub mod ast;
 #[cfg(test)]
 mod tests;
+
+pub mod ast;
 
 use lexer::{Lexer, TokenType};
 use std::iter::Peekable;

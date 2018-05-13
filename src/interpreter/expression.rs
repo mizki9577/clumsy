@@ -48,7 +48,7 @@ impl Expression {
 }
 
 impl<'a> From<&'a ast::Expression> for Expression {
-    fn from(value: &ast::Expression) -> Expression {
+    fn from(value: &ast::Expression) -> Self {
         let mut result = match value {
             ast::Expression::Abstraction(abstraction) => {
                 Expression::Abstraction(abstraction.into())
@@ -62,26 +62,26 @@ impl<'a> From<&'a ast::Expression> for Expression {
 }
 
 impl<'a> From<&'a ast::Application> for Expression {
-    fn from(value: &ast::Application) -> Expression {
+    fn from(value: &ast::Application) -> Self {
         let ast::Application { expressions } = value;
         Expression::from_ast_impl(expressions)
     }
 }
 
 impl From<Abstraction> for Expression {
-    fn from(value: Abstraction) -> Expression {
+    fn from(value: Abstraction) -> Self {
         Expression::Abstraction(value)
     }
 }
 
 impl From<Application> for Expression {
-    fn from(value: Application) -> Expression {
+    fn from(value: Application) -> Self {
         Expression::Application(value)
     }
 }
 
 impl From<Variable> for Expression {
-    fn from(value: Variable) -> Expression {
+    fn from(value: Variable) -> Self {
         Expression::Variable(value)
     }
 }

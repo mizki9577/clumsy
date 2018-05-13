@@ -73,7 +73,7 @@ version = "0.1.0"
 dependencies = [
  "ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clippy 0.0.196 (registry+https://github.com/rust-lang/crates.io-index)",
- "clumsy 0.1.1",
+ "clumsy 0.1.0",
  "rustyline 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -110,7 +110,7 @@ dependencies = [
 
 [[package]]
 name = "clumsy"
-version = "0.1.1"
+version = "0.1.0"
 
 [[package]]
 name = "dtoa"

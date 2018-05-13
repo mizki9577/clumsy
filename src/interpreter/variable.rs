@@ -18,7 +18,7 @@ impl Variable {
 }
 
 impl<'a> From<&'a ast::Variable> for Variable {
-    fn from(value: &ast::Variable) -> Variable {
+    fn from(value: &ast::Variable) -> Self {
         let ast::Variable(name) = value;
         Variable::new(None, name)
     }
