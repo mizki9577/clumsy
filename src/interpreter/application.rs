@@ -1,6 +1,6 @@
+use interpreter::Expression;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use translator::Expression;
 
 #[derive(Debug, PartialEq)]
 pub struct Application {

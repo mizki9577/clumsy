@@ -1,4 +1,4 @@
-use translator::{Abstraction, Application, Variable};
+use interpreter::{Abstraction, Application, Variable};
 
 use parser::ast;
 use std::collections::HashMap;
