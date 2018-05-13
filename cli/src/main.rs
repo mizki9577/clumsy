@@ -6,9 +6,9 @@ extern crate clumsy;
 extern crate rustyline;
 
 use ansi_term::Color;
+use clumsy::interpreter::Expression;
 use clumsy::lexer::Lexer;
 use clumsy::parser;
-use clumsy::translator::Expression;
 use rustyline::error::ReadlineError;
 
 static PROMPT: &str = ">>> ";

@@ -31,7 +31,7 @@ impl Abstraction {
 }
 
 impl<'a> From<&'a ast::Abstraction> for Abstraction {
-    fn from(value: &ast::Abstraction) -> Abstraction {
+    fn from(value: &ast::Abstraction) -> Self {
         let ast::Abstraction {
             parameters,
             expression,

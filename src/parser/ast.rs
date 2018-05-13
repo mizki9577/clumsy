@@ -43,7 +43,7 @@ impl<T> From<T> for Variable
 where
     T: Into<String>,
 {
-    fn from(value: T) -> Variable {
+    fn from(value: T) -> Self {
         Variable(value.into())
     }
 }
