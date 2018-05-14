@@ -4,7 +4,7 @@ use super::*;
 fn lexer_test() {
     assert_eq!(
         Lexer::new("x").next().unwrap(),
-        Token::new(TokenType::Variable("x".to_owned()), 0, 0)
+        Token::new(TokenType::Identifier("x".to_owned()), 0, 0)
     );
     assert_eq!(
         Lexer::new("(").next().unwrap(),

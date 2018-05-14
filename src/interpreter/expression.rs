@@ -1,6 +1,6 @@
 use interpreter::{Abstraction, Application, Variable};
 
-use parser::ast;
+use parser::ast::{ASTApplication, AST};
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -34,7 +34,7 @@ impl Expression {
         }
     }
 
-    fn from_ast_impl(expressions: &[ast::Expression]) -> Expression {
+    fn from_ast_impl(expressions: &[AST]) -> Expression {
         let argument = expressions.last().unwrap();
         if expressions.len() == 1 {
             argument.into()
@@ -47,23 +47,21 @@ impl Expression {
     }
 }
 
-impl<'a> From<&'a ast::Expression> for Expression {
-    fn from(value: &ast::Expression) -> Self {
+impl<'a> From<&'a AST> for Expression {
+    fn from(value: &AST) -> Self {
         let mut result = match value {
-            ast::Expression::Abstraction(abstraction) => {
-                Expression::Abstraction(abstraction.into())
-            }
-            ast::Expression::Application(application) => application.into(),
-            ast::Expression::Variable(variable) => Expression::Variable(variable.into()),
+            AST::Abstraction(abstraction) => Expression::Abstraction(abstraction.into()),
+            AST::Application(application) => application.into(),
+            AST::Identifier(identifier) => Expression::Variable(identifier.into()),
         };
         result.assign_indices();
         result
     }
 }
 
-impl<'a> From<&'a ast::Application> for Expression {
-    fn from(value: &ast::Application) -> Self {
-        let ast::Application { expressions } = value;
+impl<'a> From<&'a ASTApplication> for Expression {
+    fn from(value: &ASTApplication) -> Self {
+        let ASTApplication { expressions } = value;
         Expression::from_ast_impl(expressions)
     }
 }

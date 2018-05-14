@@ -1,4 +1,4 @@
-use parser::ast;
+use parser::ast::ASTIdentifier;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
@@ -17,9 +17,9 @@ impl Variable {
     }
 }
 
-impl<'a> From<&'a ast::Variable> for Variable {
-    fn from(value: &ast::Variable) -> Self {
-        let ast::Variable(name) = value;
+impl<'a> From<&'a ASTIdentifier> for Variable {
+    fn from(value: &ASTIdentifier) -> Self {
+        let ASTIdentifier(name) = value;
         Variable::new(None, name)
     }
 }

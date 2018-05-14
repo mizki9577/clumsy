@@ -1,11 +1,11 @@
 use super::*;
-use parser::ast;
+use parser::ast::*;
 
 #[test]
 fn translate_abstraction() {
-    let a = Expression::from(&ast::Expression::Abstraction(ast::Abstraction::new(
-        vec![ast::Variable::from("x"), ast::Variable::from("x")],
-        ast::Expression::Variable(ast::Variable::from("x")),
+    let a = Expression::from(&AST::Abstraction(ASTAbstraction::new(
+        vec![ASTIdentifier::from("x"), ASTIdentifier::from("x")],
+        AST::Identifier(ASTIdentifier::from("x")),
     )));
     let expected = Expression::from(Abstraction::new(
         "x",
