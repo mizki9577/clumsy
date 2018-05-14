@@ -1,22 +1,19 @@
 #[derive(Debug, PartialEq)]
-pub enum Expression {
-    Abstraction(Abstraction),
-    Application(Application),
-    Variable(Variable),
+pub enum AST {
+    Abstraction(ASTAbstraction),
+    Application(ASTApplication),
+    Identifier(ASTIdentifier),
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Abstraction {
-    pub parameters: Vec<Variable>,
-    pub expression: Box<Expression>,
+pub struct ASTAbstraction {
+    pub parameters: Vec<ASTIdentifier>,
+    pub expression: Box<AST>,
 }
 
-impl Abstraction {
-    pub fn new(
-        parameters: impl IntoIterator<Item = Variable>,
-        expression: Expression,
-    ) -> Abstraction {
-        Abstraction {
+impl ASTAbstraction {
+    pub fn new(parameters: impl IntoIterator<Item = ASTIdentifier>, expression: AST) -> Self {
+        Self {
             parameters: parameters.into_iter().collect(),
             expression: box expression,
         }
@@ -24,26 +21,26 @@ impl Abstraction {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Application {
-    pub expressions: Vec<Expression>,
+pub struct ASTApplication {
+    pub expressions: Vec<AST>,
 }
 
-impl Application {
-    pub fn new(expressions: impl IntoIterator<Item = Expression>) -> Application {
-        Application {
+impl ASTApplication {
+    pub fn new(expressions: impl IntoIterator<Item = AST>) -> Self {
+        Self {
             expressions: expressions.into_iter().collect(),
         }
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash)]
-pub struct Variable(pub String);
+pub struct ASTIdentifier(pub String);
 
-impl<T> From<T> for Variable
+impl<T> From<T> for ASTIdentifier
 where
     T: Into<String>,
 {
     fn from(value: T) -> Self {
-        Variable(value.into())
+        ASTIdentifier(value.into())
     }
 }

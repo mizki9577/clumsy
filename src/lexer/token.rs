@@ -14,7 +14,7 @@ pub enum TokenType {
     RightBracket,
     Lambda,
     Dot,
-    Variable(String),
+    Identifier(String),
     EOF,
     InvalidCharacter(char),
 }
@@ -42,7 +42,7 @@ impl Display for TokenType {
             TokenType::RightBracket => write!(f, "')'"),
             TokenType::Lambda => write!(f, r"'\'"),
             TokenType::Dot => write!(f, "'.'"),
-            TokenType::Variable(token) => write!(f, r#""{}""#, token.as_str()),
+            TokenType::Identifier(token) => write!(f, r#""{}""#, token.as_str()),
             TokenType::EOF => write!(f, "EOF"),
             TokenType::InvalidCharacter(c) => write!(f, "'{}'", c),
         }

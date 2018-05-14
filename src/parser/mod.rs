@@ -3,6 +3,7 @@ mod tests;
 
 pub mod ast;
 
+use self::ast::{ASTAbstraction, ASTApplication, ASTIdentifier, AST};
 use lexer::{Lexer, TokenType};
 use std::iter::Peekable;
 use std::result;
@@ -16,38 +17,38 @@ fn expect(tokens: &mut Peekable<Lexer>, expected: &TokenType) -> Result<()> {
     }
 }
 
-pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
+pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<AST> {
     let token = tokens.peek().unwrap();
     match token.token_type {
         TokenType::Lambda => parse_abstraction(tokens),
-        TokenType::LeftBracket | TokenType::Variable(_) => parse_application(tokens),
+        TokenType::LeftBracket | TokenType::Identifier(_) => parse_application(tokens),
         _ => Err(format!("Expected '\\', '(' or Variable, found {}", token)),
     }
 }
 
-fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
+fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<AST> {
     expect(tokens, &TokenType::Lambda)?;
     let parameters = parse_parameters(tokens)?;
     expect(tokens, &TokenType::Dot)?;
     let expression = parse_expression(tokens)?;
-    Ok(ast::Expression::Abstraction(ast::Abstraction::new(
+    Ok(AST::Abstraction(ASTAbstraction::new(
         parameters, expression,
     )))
 }
 
-fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ast::Variable>> {
-    let mut parameters = vec![parse_variable(tokens)?];
-    while let TokenType::Variable(_) = tokens.peek().unwrap().token_type {
-        parameters.push(parse_variable(tokens)?);
+fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ASTIdentifier>> {
+    let mut parameters = vec![parse_identifier(tokens)?];
+    while let TokenType::Identifier(_) = tokens.peek().unwrap().token_type {
+        parameters.push(parse_identifier(tokens)?);
     }
     Ok(parameters)
 }
 
-fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
+fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<AST> {
     let mut expressions = Vec::new();
     while let Some(token) = tokens.peek() {
         expressions.push(match token.token_type {
-            TokenType::Variable(_) => ast::Expression::Variable(parse_variable(tokens)?),
+            TokenType::Identifier(_) => AST::Identifier(parse_identifier(tokens)?),
             TokenType::LeftBracket => {
                 expect(tokens, &TokenType::LeftBracket)?;
                 let expression = parse_expression(tokens)?;
@@ -58,15 +59,13 @@ fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
             _ => break,
         });
     }
-    Ok(ast::Expression::Application(ast::Application::new(
-        expressions,
-    )))
+    Ok(AST::Application(ASTApplication::new(expressions)))
 }
 
-fn parse_variable(tokens: &mut Peekable<Lexer>) -> Result<ast::Variable> {
+fn parse_identifier(tokens: &mut Peekable<Lexer>) -> Result<ASTIdentifier> {
     let token = tokens.next().unwrap();
     match token.token_type {
-        TokenType::Variable(variable) => Ok(ast::Variable::from(variable)),
+        TokenType::Identifier(variable) => Ok(ASTIdentifier::from(variable)),
         _ => Err(format!("Expected Variable, found {}", token)),
     }
 }
