@@ -1,5 +1,4 @@
 use interpreter::Expression;
-use parser::ast::{ASTAbstraction, ASTIdentifier, AST};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
@@ -15,28 +14,6 @@ impl Abstraction {
             name: name.to_owned(),
             expression: box expression,
         }
-    }
-
-    fn from_ast_impl(parameters: &[ASTIdentifier], expression: &AST) -> Abstraction {
-        let ASTIdentifier(name) = &parameters[0];
-        Abstraction::new(
-            name,
-            if parameters.len() == 1 {
-                expression.into()
-            } else {
-                Expression::Abstraction(Abstraction::from_ast_impl(&parameters[1..], expression))
-            },
-        )
-    }
-}
-
-impl<'a> From<&'a ASTAbstraction> for Abstraction {
-    fn from(value: &ASTAbstraction) -> Self {
-        let ASTAbstraction {
-            parameters,
-            expression,
-        } = value;
-        Abstraction::from_ast_impl(parameters, expression)
     }
 }
 

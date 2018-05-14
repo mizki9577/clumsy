@@ -1,6 +1,6 @@
 use interpreter::{Abstraction, Application, Variable};
 
-use parser::ast::{ASTApplication, AST};
+use parser::ast::{ASTAbstraction, ASTApplication, ASTIdentifier, AST};
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -33,54 +33,42 @@ impl Expression {
             }
         }
     }
-
-    fn from_ast_impl(expressions: &[AST]) -> Expression {
-        let argument = expressions.last().unwrap();
-        if expressions.len() == 1 {
-            argument.into()
-        } else {
-            Expression::Application(Application::new(
-                Expression::from_ast_impl(&expressions[..expressions.len() - 1]),
-                argument.into(),
-            ))
-        }
-    }
 }
 
 impl<'a> From<&'a AST> for Expression {
     fn from(value: &AST) -> Self {
         let mut result = match value {
-            AST::Abstraction(abstraction) => Expression::Abstraction(abstraction.into()),
-            AST::Application(application) => application.into(),
+            AST::Abstraction(ASTAbstraction {
+                parameters,
+                box expression,
+            }) => {
+                let mut iter = parameters.iter();
+                let ASTIdentifier(parameter) = iter.next_back().unwrap();
+                Expression::Abstraction(iter.rfold(
+                    Abstraction::new(parameter, expression.into()),
+                    |body, ASTIdentifier(parameter)| {
+                        Abstraction::new(parameter, Expression::Abstraction(body))
+                    },
+                ))
+            }
+            AST::Application(ASTApplication { expressions }) => {
+                let mut iter = expressions.iter();
+                let callee = iter.next().unwrap();
+                if let Some(argument) = iter.next() {
+                    Expression::Application(iter.fold(
+                        Application::new(callee.into(), argument.into()),
+                        |callee, argument| {
+                            Application::new(Expression::Application(callee), argument.into())
+                        },
+                    ))
+                } else {
+                    callee.into()
+                }
+            }
             AST::Identifier(identifier) => Expression::Variable(identifier.into()),
         };
         result.assign_indices();
         result
-    }
-}
-
-impl<'a> From<&'a ASTApplication> for Expression {
-    fn from(value: &ASTApplication) -> Self {
-        let ASTApplication { expressions } = value;
-        Expression::from_ast_impl(expressions)
-    }
-}
-
-impl From<Abstraction> for Expression {
-    fn from(value: Abstraction) -> Self {
-        Expression::Abstraction(value)
-    }
-}
-
-impl From<Application> for Expression {
-    fn from(value: Application) -> Self {
-        Expression::Application(value)
-    }
-}
-
-impl From<Variable> for Expression {
-    fn from(value: Variable) -> Self {
-        Expression::Variable(value)
     }
 }
 

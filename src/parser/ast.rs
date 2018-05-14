@@ -5,6 +5,15 @@ pub enum AST {
     Identifier(ASTIdentifier),
 }
 
+impl<T> From<T> for AST
+where
+    T: Into<ASTIdentifier>,
+{
+    fn from(value: T) -> Self {
+        AST::Identifier(value.into())
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct ASTAbstraction {
     pub parameters: Vec<ASTIdentifier>,
@@ -12,10 +21,16 @@ pub struct ASTAbstraction {
 }
 
 impl ASTAbstraction {
-    pub fn new(parameters: impl IntoIterator<Item = ASTIdentifier>, expression: AST) -> Self {
-        Self {
-            parameters: parameters.into_iter().collect(),
-            expression: box expression,
+    pub fn new(
+        parameters: impl IntoIterator<Item = impl Into<ASTIdentifier>>,
+        expression: impl Into<AST>,
+    ) -> Self {
+        ASTAbstraction {
+            parameters: parameters
+                .into_iter()
+                .map(|parameter| parameter.into())
+                .collect(),
+            expression: box expression.into(),
         }
     }
 }
@@ -26,9 +41,12 @@ pub struct ASTApplication {
 }
 
 impl ASTApplication {
-    pub fn new(expressions: impl IntoIterator<Item = AST>) -> Self {
-        Self {
-            expressions: expressions.into_iter().collect(),
+    pub fn new(expressions: impl IntoIterator<Item = impl Into<AST>>) -> Self {
+        ASTApplication {
+            expressions: expressions
+                .into_iter()
+                .map(|expression| expression.into())
+                .collect(),
         }
     }
 }
