@@ -21,9 +21,11 @@ impl Expression {
     fn assign_indices_impl<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
         match self {
             Expression::Abstraction(Abstraction { name, expression }) => {
-                table.iter_mut().for_each(|(_, i)| *i += 1); // why rustc tells me `i` does not need to be mutable?
+                table.iter_mut().for_each(|(_, i)| *i += 1);
                 table.insert(name, 0);
                 expression.assign_indices_impl(table);
+                table.remove(name.as_str());
+                table.iter_mut().for_each(|(_, i)| *i -= 1);
             }
             Expression::Application(Application { callee, argument }) => {
                 callee.assign_indices_impl(table);
@@ -35,55 +37,82 @@ impl Expression {
         }
     }
 
-    fn shift(&mut self, c: usize) {
-        self.shift_impl(true, c);
-    }
-
-    fn unshift(&mut self, c: usize) {
-        self.shift_impl(false, c);
-    }
-
-    fn shift_impl(&mut self, increment: bool, c: usize) {
+    pub fn evaluate(self) -> Self {
         match self {
-            Expression::Abstraction(Abstraction { expression, .. }) => {
-                expression.shift_impl(increment, c + 1);
-            }
-            Expression::Application(Application { callee, argument }) => {
-                callee.shift_impl(increment, c);
-                argument.shift_impl(increment, c);
-            }
-            Expression::Variable(Variable {
-                index: Some(index), ..
-            }) if *index >= c =>
-            {
-                if increment {
-                    *index += 1
-                } else {
-                    *index -= 1
-                };
-            }
-            _ => (),
+            Expression::Application(Application {
+                callee: box Expression::Abstraction(Abstraction { expression, .. }),
+                box argument,
+            }) => expression
+                .substituted(0, argument.shifted(0))
+                .unshifted(0)
+                .evaluate(),
+
+            Expression::Application(Application {
+                callee,
+                box argument,
+            }) => Expression::Application(Application::new(callee.evaluate(), argument)).evaluate(),
+            _ => self,
         }
     }
 
-    fn substitute(&mut self, j: usize, mut term: Expression) {
+    fn shifted(self, c: usize) -> Self {
+        self.shift_impl(true, c)
+    }
+
+    fn unshifted(self, c: usize) -> Self {
+        self.shift_impl(false, c)
+    }
+
+    fn shift_impl(self, increment: bool, c: usize) -> Self {
         match self {
-            Expression::Abstraction(Abstraction { expression, .. }) => {
-                term.shift(0);
-                expression.substitute(j + 1, term);
+            Expression::Abstraction(Abstraction { name, expression }) => {
+                Expression::Abstraction(Abstraction {
+                    name,
+                    expression: box expression.shift_impl(increment, c + 1),
+                })
+            }
+            Expression::Application(Application { callee, argument }) => {
+                Expression::Application(Application {
+                    callee: box callee.shift_impl(increment, c),
+                    argument: box argument.shift_impl(increment, c),
+                })
+            }
+            Expression::Variable(Variable {
+                index: Some(index),
+                ref name,
+            }) if index >= c =>
+            {
+                Expression::Variable(Variable {
+                    index: Some(if increment { index + 1 } else { index - 1 }),
+                    name: name.to_owned(),
+                })
+            }
+            _ => self,
+        }
+    }
+
+    fn substituted(self, j: usize, term: Expression) -> Self {
+        match self {
+            Expression::Abstraction(Abstraction { name, expression }) => {
+                Expression::Abstraction(Abstraction {
+                    name,
+                    expression: box expression.substituted(j + 1, term.shifted(0)),
+                })
             }
             Expression::Application(Application { callee, argument }) => {
                 let cloned_term = term.clone();
-                callee.substitute(j, term);
-                argument.substitute(j, cloned_term);
+                Expression::Application(Application {
+                    callee: box callee.substituted(j, term),
+                    argument: box argument.substituted(j, cloned_term),
+                })
             }
             Expression::Variable(Variable {
                 index: Some(index), ..
-            }) if *index == j =>
+            }) if index == j =>
             {
-                *self = term;
+                term
             }
-            _ => (),
+            _ => self,
         }
     }
 }
