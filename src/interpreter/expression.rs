@@ -13,6 +13,7 @@ pub enum Expression {
 }
 
 impl Expression {
+    // Is this should be immutable?
     fn assign_indices(&mut self) {
         self.assign_indices_impl(&mut HashMap::new())
     }
