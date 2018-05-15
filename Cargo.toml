@@ -2,7 +2,3 @@
 name = "clumsy"
 version = "0.1.0"
 authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
-
-[dependencies.clippy]
-version = "*"
-optional = true
