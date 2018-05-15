@@ -2,7 +2,7 @@ use interpreter::Expression;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Application {
     pub callee: Box<Expression>,
     pub argument: Box<Expression>,

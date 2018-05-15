@@ -2,7 +2,7 @@ use parser::ast::ASTIdentifier;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
     pub index: Option<usize>,
     pub name: String,
