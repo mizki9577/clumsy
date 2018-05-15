@@ -34,6 +34,25 @@ impl Expression {
             }
         }
     }
+
+    fn shift(&mut self, d: usize, c: usize) {
+        match self {
+            Expression::Abstraction(Abstraction { expression, .. }) => {
+                expression.shift(d, c + 1);
+            }
+            Expression::Application(Application { callee, argument }) => {
+                callee.shift(d, c);
+                argument.shift(d, c);
+            }
+            Expression::Variable(Variable {
+                index: Some(index), ..
+            }) if *index >= c =>
+            {
+                *index += d
+            }
+            _ => (),
+        }
+    }
 }
 
 impl<'a> From<&'a AST> for Expression {
@@ -80,5 +99,56 @@ impl Display for Expression {
             Expression::Application(application) => application.fmt(f),
             Expression::Variable(variable) => variable.fmt(f),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_shift() {
+        let mut variable = Expression::Variable(Variable::new(Some(0), "x"));
+        let expected = Expression::Variable(Variable::new(Some(1), "x"));
+        variable.shift(1, 0);
+        assert_eq!(expected, variable);
+
+        let mut variable = Expression::Variable(Variable::new(Some(0), "x"));
+        let expected = Expression::Variable(Variable::new(Some(0), "x"));
+        variable.shift(1, 1);
+        assert_eq!(expected, variable);
+
+        let mut free_abstraction = Expression::Abstraction(Abstraction::new(
+            "x",
+            Expression::Variable(Variable::new(Some(1), "y")),
+        ));
+        let expected = Expression::Abstraction(Abstraction::new(
+            "x",
+            Expression::Variable(Variable::new(Some(2), "y")),
+        ));
+        free_abstraction.shift(1, 0);
+        assert_eq!(expected, free_abstraction);
+
+        let mut bound_abstraction = Expression::Abstraction(Abstraction::new(
+            "x",
+            Expression::Variable(Variable::new(Some(0), "x")),
+        ));
+        let expected = Expression::Abstraction(Abstraction::new(
+            "x",
+            Expression::Variable(Variable::new(Some(0), "x")),
+        ));
+        bound_abstraction.shift(1, 0);
+        assert_eq!(expected, bound_abstraction);
+
+        let mut application = Expression::Application(Application::new(
+            Expression::Variable(Variable::new(Some(0), "x")),
+            Expression::Variable(Variable::new(Some(1), "y")),
+        ));
+        let expected = Expression::Application(Application::new(
+            Expression::Variable(Variable::new(Some(1), "x")),
+            Expression::Variable(Variable::new(Some(2), "y")),
+        ));
+        application.shift(1, 0);
+        assert_eq!(expected, application);
     }
 }
