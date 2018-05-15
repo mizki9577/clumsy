@@ -35,20 +35,32 @@ impl Expression {
         }
     }
 
-    fn shift(&mut self, d: usize, c: usize) {
+    fn shift(&mut self, c: usize) {
+        self.shift_impl(true, c);
+    }
+
+    fn unshift(&mut self, c: usize) {
+        self.shift_impl(false, c);
+    }
+
+    fn shift_impl(&mut self, increment: bool, c: usize) {
         match self {
             Expression::Abstraction(Abstraction { expression, .. }) => {
-                expression.shift(d, c + 1);
+                expression.shift_impl(increment, c + 1);
             }
             Expression::Application(Application { callee, argument }) => {
-                callee.shift(d, c);
-                argument.shift(d, c);
+                callee.shift_impl(increment, c);
+                argument.shift_impl(increment, c);
             }
             Expression::Variable(Variable {
                 index: Some(index), ..
             }) if *index >= c =>
             {
-                *index += d
+                if increment {
+                    *index += 1
+                } else {
+                    *index -= 1
+                };
             }
             _ => (),
         }
@@ -57,7 +69,7 @@ impl Expression {
     fn substitute(&mut self, j: usize, mut term: Expression) {
         match self {
             Expression::Abstraction(Abstraction { expression, .. }) => {
-                term.shift(1, 0);
+                term.shift(0);
                 expression.substitute(j + 1, term);
             }
             Expression::Application(Application { callee, argument }) => {
@@ -131,12 +143,12 @@ mod test {
     fn test_shift() {
         let mut variable = Expression::Variable(Variable::new(Some(0), "x"));
         let expected = Expression::Variable(Variable::new(Some(1), "x"));
-        variable.shift(1, 0);
+        variable.shift_impl(true, 0);
         assert_eq!(expected, variable);
 
         let mut variable = Expression::Variable(Variable::new(Some(0), "x"));
         let expected = Expression::Variable(Variable::new(Some(0), "x"));
-        variable.shift(1, 1);
+        variable.shift_impl(true, 1);
         assert_eq!(expected, variable);
 
         let mut free_abstraction = Expression::Abstraction(Abstraction::new(
@@ -147,7 +159,7 @@ mod test {
             "x",
             Expression::Variable(Variable::new(Some(2), "y")),
         ));
-        free_abstraction.shift(1, 0);
+        free_abstraction.shift_impl(true, 0);
         assert_eq!(expected, free_abstraction);
 
         let mut bound_abstraction = Expression::Abstraction(Abstraction::new(
@@ -158,7 +170,7 @@ mod test {
             "x",
             Expression::Variable(Variable::new(Some(0), "x")),
         ));
-        bound_abstraction.shift(1, 0);
+        bound_abstraction.shift_impl(true, 0);
         assert_eq!(expected, bound_abstraction);
 
         let mut application = Expression::Application(Application::new(
@@ -169,7 +181,7 @@ mod test {
             Expression::Variable(Variable::new(Some(1), "x")),
             Expression::Variable(Variable::new(Some(2), "y")),
         ));
-        application.shift(1, 0);
+        application.shift_impl(true, 0);
         assert_eq!(expected, application);
     }
 
