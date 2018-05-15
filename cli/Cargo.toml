@@ -13,7 +13,3 @@ ansi_term = "0.11"
 
 [dependencies.clumsy]
 path = ".."
-
-[dependencies.clippy]
-version = "*"
-optional = true

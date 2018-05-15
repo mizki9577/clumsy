@@ -1,5 +1,4 @@
-#![feature(plugin, box_syntax, box_patterns, nll)]
-#![cfg_attr(feature = "clippy", plugin(clippy))]
+#![feature(box_syntax, box_patterns, nll)]
 
 pub mod interpreter;
 pub mod lexer;
