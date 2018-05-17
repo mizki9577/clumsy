@@ -4,7 +4,7 @@
   "main": "index.js",
   "repository": "https://github.com/mizkichan/clumsy",
   "author": "Mizki SUZUMORI <suzumorimizuki@gmail.com>",
-  "license": "BSD-2-Clause",
+  "license": "CC0-1.0",
   "private": true,
   "scripts": {
     "start": "cargo watch -w ./src/*.rs -s 'yarn build-rust && yarn build-wasm' & webpack-dev-server",
