@@ -11,9 +11,7 @@ use clumsy::interpreter::Expression;
 use clumsy::lexer::Lexer;
 use clumsy::parser;
 use rustyline::error::ReadlineError;
-use std::fs::File;
-use std::io::BufReader;
-use std::io::Read as _;
+use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -43,20 +41,10 @@ fn main() {
         Options {
             program: Some(path),
             ..
-        } => {
-            match File::open(path) {
-                Ok(file) => {
-                    let mut reader = BufReader::new(file);
-                    let mut source = String::new();
-                    if reader.read_to_string(&mut source).is_ok() {
-                        eval(&source);
-                    } else {
-                        // TODO: handle errors
-                    }
-                }
-                Err(error) => println!("{}", error),
-            }
-        }
+        } => match fs::read_to_string(path) {
+            Ok(ref source) => eval(source),
+            Err(error) => println!("{}", error),
+        },
 
         Options { ref history, .. } => repl(history),
     }
