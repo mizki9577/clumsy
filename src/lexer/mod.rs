@@ -49,11 +49,11 @@ impl<'a> Iterator for Lexer<'a> {
             Some(')') => TokenType::RightBracket,
             Some('\\') => TokenType::Lambda,
             Some('.') => TokenType::Dot,
-            Some(c) if c.is_ascii_alphanumeric() || c == '-' || c == '_' => {
+            Some(c) if c.is_ascii_alphanumeric() || c == '_' => {
                 let mut identifier = String::new();
                 identifier.push(c);
                 while let Some(&c) = self.source.peek() {
-                    if !c.is_ascii_alphanumeric() && c != '-' && c != '_' {
+                    if !c.is_ascii_alphanumeric() && c != '_' {
                         break;
                     }
                     identifier.push(c);
