@@ -35,6 +35,12 @@ impl ASTAbstraction {
     }
 }
 
+impl From<ASTAbstraction> for AST {
+    fn from(value: ASTAbstraction) -> Self {
+        AST::Abstraction(value)
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct ASTApplication {
     pub expressions: Vec<AST>,
@@ -48,6 +54,12 @@ impl ASTApplication {
                 .map(|expression| expression.into())
                 .collect(),
         }
+    }
+}
+
+impl From<ASTApplication> for AST {
+    fn from(value: ASTApplication) -> Self {
+        AST::Application(value)
     }
 }
 
