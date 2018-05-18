@@ -21,11 +21,17 @@ impl Expression {
     fn assign_indices_impl<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
         match self {
             Expression::Abstraction(Abstraction { name, expression }) => {
+                let outer = table.get(name.as_str()).cloned();
                 table.iter_mut().for_each(|(_, i)| *i += 1);
                 table.insert(name, 0);
+
                 expression.assign_indices_impl(table);
+
                 table.remove(name.as_str());
                 table.iter_mut().for_each(|(_, i)| *i -= 1);
+                if let Some(i) = outer {
+                    table.insert(name, i);
+                }
             }
             Expression::Application(Application { callee, argument }) => {
                 callee.assign_indices_impl(table);
@@ -182,6 +188,25 @@ mod test {
             )),
         ));
         assert_eq!(expected, a);
+
+        let b = Expression::from(&AST::Abstraction(ASTAbstraction::new(
+            vec!["x"],
+            ASTApplication::new(vec![
+                AST::Abstraction(ASTAbstraction::new(vec!["x"], "x")),
+                AST::Identifier("x".into()),
+            ]),
+        )));
+        let expected = Expression::Abstraction(Abstraction::new(
+            "x",
+            Expression::Application(Application::new(
+                Expression::Abstraction(Abstraction::new(
+                    "x",
+                    Expression::Variable(Variable::new(Some(0), "x")),
+                )),
+                Expression::Variable(Variable::new(Some(0), "x")),
+            )),
+        ));
+        assert_eq!(expected, b);
     }
 
     #[test]
