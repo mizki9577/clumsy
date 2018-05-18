@@ -48,9 +48,12 @@ impl Expression {
                 .evaluate(),
 
             Expression::Application(Application {
-                callee,
+                callee: box Expression::Application(callee),
                 box argument,
-            }) => Expression::Application(Application::new(callee.evaluate(), argument)).evaluate(),
+            }) => Expression::Application(Application::new(
+                Expression::Application(callee).evaluate(),
+                argument,
+            )).evaluate(),
             _ => self,
         }
     }
