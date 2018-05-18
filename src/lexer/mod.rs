@@ -69,27 +69,14 @@ impl<'a> Iterator for Lexer<'a> {
 #[test]
 fn lexer_test() {
     assert_eq!(
-        Lexer::new("x").next().unwrap(),
-        Token::new(TokenType::Identifier("x".to_owned()), 0, 0)
-    );
-    assert_eq!(
-        Lexer::new("(").next().unwrap(),
-        Token::new(TokenType::LeftBracket, 0, 0)
-    );
-    assert_eq!(
-        Lexer::new(")").next().unwrap(),
-        Token::new(TokenType::RightBracket, 0, 0)
-    );
-    assert_eq!(
-        Lexer::new(".").next().unwrap(),
-        Token::new(TokenType::Dot, 0, 0)
-    );
-    assert_eq!(
-        Lexer::new("\\").next().unwrap(),
-        Token::new(TokenType::Lambda, 0, 0)
-    );
-    assert_eq!(
-        Lexer::new("?").next().unwrap(),
-        Token::new(TokenType::InvalidCharacter('?'), 0, 0)
+        vec![
+            Token::new(TokenType::LeftBracket, 0, 0),
+            Token::new(TokenType::Lambda, 0, 1),
+            Token::new(TokenType::Identifier("foo".to_owned()), 0, 2),
+            Token::new(TokenType::Identifier("barBaz_2000".to_owned()), 1, 0),
+            Token::new(TokenType::Dot, 1, 11),
+            Token::new(TokenType::RightBracket, 1, 12),
+        ],
+        Lexer::new("(\\foo\nbarBaz_2000.)").collect::<Vec<_>>(),
     );
 }
