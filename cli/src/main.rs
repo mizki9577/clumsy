@@ -43,7 +43,7 @@ fn main() {
             ..
         } => match fs::read_to_string(path) {
             Ok(ref source) => eval(source),
-            Err(error) => println!("{}", error),
+            Err(error) => println!("{}", RED.paint(error.to_string())),
         },
 
         Options { ref history, .. } => repl(history),
