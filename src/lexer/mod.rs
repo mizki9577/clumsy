@@ -72,11 +72,13 @@ fn lexer_test() {
         vec![
             Token::new(TokenType::LeftBracket, 0, 0),
             Token::new(TokenType::Lambda, 0, 1),
-            Token::new(TokenType::Identifier("foo".to_owned()), 0, 2),
-            Token::new(TokenType::Identifier("barBaz_2000".to_owned()), 1, 0),
+            Token::new(TokenType::Identifier("foo".to_owned()), 0, 4),
+            Token::new(TokenType::Identifier("barBaz_2000".to_owned()), 1, 10),
             Token::new(TokenType::Dot, 1, 11),
             Token::new(TokenType::RightBracket, 1, 12),
         ],
-        Lexer::new("(\\foo\nbarBaz_2000.)").collect::<Vec<_>>(),
+        Lexer::new("(\\foo\nbarBaz_2000.)")
+            .take_while(|token| token.token_type != TokenType::EOF)
+            .collect::<Vec<_>>(),
     );
 }
