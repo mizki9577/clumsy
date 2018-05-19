@@ -152,7 +152,7 @@
 /******/ 				promises.push(installedWasmModuleData);
 /******/ 			else {
 /******/ 				var importObject = wasmImportObjects[wasmModuleId]();
-/******/ 				var req = fetch(__webpack_require__.p + "" + {"./src/clumsy_web_bg.wasm":"6b459c39e7efc926b8d9"}[wasmModuleId] + ".module.wasm");
+/******/ 				var req = fetch(__webpack_require__.p + "" + {"./src/clumsy_web_bg.wasm":"300ea03409e2b6121bf3"}[wasmModuleId] + ".module.wasm");
 /******/ 				var promise;
 /******/ 				if(importObject instanceof Promise && typeof WebAssembly.compileStreaming === 'function') {
 /******/ 					promise = Promise.all([WebAssembly.compileStreaming(req), importObject]).then(function(items) {
@@ -37701,9 +37701,6 @@ var _macOs = __webpack_require__(/*! react-desktop/macOs */ "./node_modules/reac
 
 var _styledComponents = _interopRequireDefault(__webpack_require__(/*! styled-components */ "./node_modules/styled-components/dist/styled-components.browser.es.js"));
 
-var _templateObject = /*#__PURE__*/ _taggedTemplateLiteral(["\n  width: 100%;\n  height: 4.5in;\n  overflow-y: scroll;\n  font-family: monospace;\n  font-size: 12pt;\n  color: white;\n  background-color: black;\n  white-space: pre-wrap;\n  word-break: break-all;\n"]),
-    _templateObject2 = /*#__PURE__*/ _taggedTemplateLiteral(["\n  font-family: monospace;\n  font-size: 12pt;\n  color: white;\n  background-color: black;\n  border: none;\n  outline: none;\n  padding: 0;\n  flex-grow: 1;\n"]);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -37734,6 +37731,26 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.getPrototypeOf || functio
 
 function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
 
+function _templateObject2() {
+  var data = _taggedTemplateLiteral(["\n  font-family: monospace;\n  font-size: 12pt;\n  color: white;\n  background-color: black;\n  border: none;\n  outline: none;\n  padding: 0;\n  flex-grow: 1;\n"]);
+
+  _templateObject2 = function _templateObject2() {
+    return data;
+  };
+
+  return data;
+}
+
+function _templateObject() {
+  var data = _taggedTemplateLiteral(["\n  width: 100%;\n  height: 4.5in;\n  overflow-y: scroll;\n  font-family: monospace;\n  font-size: 12pt;\n  color: white;\n  background-color: black;\n  white-space: pre-wrap;\n  word-break: break-all;\n"]);
+
+  _templateObject = function _templateObject() {
+    return data;
+  };
+
+  return data;
+}
+
 function _taggedTemplateLiteral(strings, raw) { if (!raw) { raw = strings.slice(0); } return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
 
 var ClumsyWeb = function ClumsyWeb() {
@@ -37752,11 +37769,11 @@ var ClumsyWeb = function ClumsyWeb() {
   }));
 };
 
-var Wrapper = _styledComponents.default.div(_templateObject);
+var Wrapper = _styledComponents.default.div(_templateObject());
 
 var Input = _styledComponents.default.input.attrs({
   type: 'text'
-})(_templateObject2);
+})(_templateObject2());
 
 var Editor = function Editor(_ref) {
   var prompt = _ref.prompt,
