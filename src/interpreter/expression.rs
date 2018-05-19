@@ -44,23 +44,28 @@ impl Expression {
     }
 
     pub fn evaluate(self) -> Self {
+        match self.evaluate1() {
+            Ok(result) => result.evaluate(),
+            Err(result) => result,
+        }
+    }
+
+    fn evaluate1(self) -> Result<Self, Self> {
         match self {
             Expression::Application(Application {
                 callee: box Expression::Abstraction(Abstraction { expression, .. }),
                 box argument,
-            }) => expression
-                .substituted(0, argument.shifted(0))
-                .unshifted(0)
-                .evaluate(),
+            }) => Ok(expression.substituted(0, argument.shifted(0)).unshifted(0)),
 
             Expression::Application(Application {
                 callee: box Expression::Application(callee),
                 box argument,
-            }) => Expression::Application(Application::new(
-                Expression::Application(callee).evaluate(),
-                argument,
-            )).evaluate(),
-            _ => self,
+            }) => match Expression::Application(callee).evaluate1() {
+                Ok(callee) => Ok(Expression::Application(Application::new(callee, argument))),
+                Err(callee) => Err(Expression::Application(Application::new(callee, argument))),
+            },
+
+            _ => Err(self),
         }
     }
 
