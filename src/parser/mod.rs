@@ -102,3 +102,14 @@ fn test_parse_application() {
     ])));
     assert_eq!(expected, result);
 }
+
+#[test]
+fn test_parse_paratemers() {
+    let result = parse_parameters(&mut Lexer::new("x y z").peekable());
+    let expected = Ok(vec![
+        ASTIdentifier::from("x"),
+        ASTIdentifier::from("y"),
+        ASTIdentifier::from("z"),
+    ]);
+    assert_eq!(expected, result);
+}
