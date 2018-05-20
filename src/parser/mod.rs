@@ -1,7 +1,7 @@
 pub mod ast;
 
 use self::ast::*;
-use lexer::{Lexer, Token, TokenType};
+use lexer::{Lexer, TokenType};
 use std::iter::Peekable;
 use std::result;
 
@@ -37,13 +37,17 @@ fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
 }
 
 fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ASTIdentifier>> {
-    let mut parameters = vec![parse_identifier(tokens)?];
-    while let Some(Token {
-        token_type: TokenType::Identifier(_),
-        ..
-    }) = tokens.peek()
-    {
-        parameters.push(parse_identifier(tokens)?);
+    let mut parameters = Vec::new();
+    loop {
+        if let Some(token) = tokens.peek() {
+            if let TokenType::Identifier(_) = token.token_type {
+                parameters.push(parse_identifier(tokens)?);
+            } else {
+                break;
+            }
+        } else {
+            unreachable!()
+        }
     }
     Ok(parameters)
 }
