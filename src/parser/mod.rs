@@ -15,25 +15,41 @@ fn expect(tokens: &mut Peekable<Lexer>, expected: &TokenType) -> Result<()> {
     }
 }
 
+pub fn parse(tokens: &mut Peekable<Lexer>) -> Result<AST> {
+    match tokens.peek() {
+        Some(token) => match token.token_type {
+            TokenType::Lambda | TokenType::LeftBracket | TokenType::Identifier(_) => {
+                Ok(AST::Expression(parse_expression(tokens)?))
+            }
+            TokenType::Let => Ok(AST::Let(parse_let(tokens)?)),
+            ref found => Err(format!(
+                "Expected '\\', '(', 'let' or Variable, found {}",
+                found
+            )),
+        },
+        None => unreachable!(),
+    }
+}
+
 pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
     match tokens.peek() {
         Some(token) => match token.token_type {
-            TokenType::Lambda => parse_abstraction(tokens),
-            TokenType::LeftBracket | TokenType::Identifier(_) => parse_application(tokens),
+            TokenType::Lambda => Ok(ASTExpression::Abstraction(parse_abstraction(tokens)?)),
+            TokenType::LeftBracket | TokenType::Identifier(_) => {
+                Ok(ASTExpression::Application(parse_application(tokens)?))
+            }
             ref found => Err(format!("Expected '\\', '(' or Variable, found {}", found)),
         },
         None => unreachable!(),
     }
 }
 
-fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
+fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<ASTAbstraction> {
     expect(tokens, &TokenType::Lambda)?;
     let parameters = parse_parameters(tokens)?;
     expect(tokens, &TokenType::Dot)?;
     let expression = parse_expression(tokens)?;
-    Ok(ASTExpression::Abstraction(ASTAbstraction::new(
-        parameters, expression,
-    )))
+    Ok(ASTAbstraction::new(parameters, expression))
 }
 
 fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ASTIdentifier>> {
@@ -52,7 +68,7 @@ fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ASTIdentifier>> 
     Ok(parameters)
 }
 
-fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
+fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ASTApplication> {
     let mut expressions = Vec::new();
     while let Some(token) = tokens.peek() {
         expressions.push(match token.token_type {
@@ -63,11 +79,11 @@ fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
                 expect(tokens, &TokenType::RightBracket)?;
                 expression
             }
-            TokenType::Lambda => parse_abstraction(tokens)?,
+            TokenType::Lambda => ASTExpression::Abstraction(parse_abstraction(tokens)?),
             _ => break,
         });
     }
-    Ok(ASTExpression::Application(ASTApplication::new(expressions)))
+    Ok(ASTApplication::new(expressions))
 }
 
 fn parse_identifier(tokens: &mut Peekable<Lexer>) -> Result<ASTIdentifier> {
@@ -81,39 +97,48 @@ fn parse_identifier(tokens: &mut Peekable<Lexer>) -> Result<ASTIdentifier> {
 }
 
 fn parse_let(tokens: &mut Peekable<Lexer>) -> Result<ASTLet> {
-    unimplemented!()
+    expect(tokens, &TokenType::Let)?;
+    let variable = parse_identifier(tokens)?;
+    expect(tokens, &TokenType::Equal)?;
+    let expression = parse_expression(tokens)?;
+    Ok(ASTLet::new(variable, expression))
 }
 
-#[test]
-fn test_parse_abstraction() {
-    let result = parse_abstraction(&mut Lexer::new("\\x y. x").peekable());
-    let expected = Ok(ASTExpression::Abstraction(ASTAbstraction::new(
-        vec![ASTIdentifier::from("x"), ASTIdentifier::from("y")],
-        ASTExpression::Application(ASTApplication::new(vec![ASTExpression::Identifier(
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_parse_abstraction() {
+        let result = parse_abstraction(&mut Lexer::new("\\x y. x").peekable());
+        let expected = Ok(ASTAbstraction::new(
+            vec![ASTIdentifier::from("x"), ASTIdentifier::from("y")],
+            ASTExpression::Application(ASTApplication::new(vec![ASTExpression::Identifier(
+                ASTIdentifier::from("x"),
+            )])),
+        ));
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_parse_application() {
+        let result = parse_application(&mut Lexer::new("x y z").peekable());
+        let expected = Ok(ASTApplication::new(vec![
+            ASTExpression::Identifier(ASTIdentifier::from("x")),
+            ASTExpression::Identifier(ASTIdentifier::from("y")),
+            ASTExpression::Identifier(ASTIdentifier::from("z")),
+        ]));
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_parse_paratemers() {
+        let result = parse_parameters(&mut Lexer::new("x y z").peekable());
+        let expected = Ok(vec![
             ASTIdentifier::from("x"),
-        )])),
-    )));
-    assert_eq!(expected, result);
-}
-
-#[test]
-fn test_parse_application() {
-    let result = parse_application(&mut Lexer::new("x y z").peekable());
-    let expected = Ok(ASTExpression::Application(ASTApplication::new(vec![
-        ASTExpression::Identifier(ASTIdentifier::from("x")),
-        ASTExpression::Identifier(ASTIdentifier::from("y")),
-        ASTExpression::Identifier(ASTIdentifier::from("z")),
-    ])));
-    assert_eq!(expected, result);
-}
-
-#[test]
-fn test_parse_paratemers() {
-    let result = parse_parameters(&mut Lexer::new("x y z").peekable());
-    let expected = Ok(vec![
-        ASTIdentifier::from("x"),
-        ASTIdentifier::from("y"),
-        ASTIdentifier::from("z"),
-    ]);
-    assert_eq!(expected, result);
+            ASTIdentifier::from("y"),
+            ASTIdentifier::from("z"),
+        ]);
+        assert_eq!(expected, result);
+    }
 }

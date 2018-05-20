@@ -173,6 +173,12 @@ impl<'a> From<&'a ASTExpression> for Expression {
     }
 }
 
+impl<'a> From<&'a AST> for Expression {
+    fn from(_value: &AST) -> Self {
+        unimplemented!()
+    }
+}
+
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
