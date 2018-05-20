@@ -46,17 +46,22 @@ impl<'a> Iterator for Lexer<'a> {
             Some(')') => TokenType::RightBracket,
             Some('\\') => TokenType::Lambda,
             Some('.') => TokenType::Dot,
+            Some('=') => TokenType::Equal,
             Some(c) if c.is_ascii_alphanumeric() || c == '_' => {
-                let mut identifier = String::new();
-                identifier.push(c);
+                let mut word = String::new();
+                word.push(c);
                 while let Some(&c) = self.source.peek() {
                     if !c.is_ascii_alphanumeric() && c != '_' {
                         break;
                     }
-                    identifier.push(c);
+                    word.push(c);
                     self.source_next();
                 }
-                TokenType::Identifier(identifier)
+                if word == "let" {
+                    TokenType::Let
+                } else {
+                    TokenType::Identifier(word)
+                }
             }
             Some(c) => TokenType::InvalidCharacter(c),
             None => TokenType::EOF,
