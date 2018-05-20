@@ -4,25 +4,28 @@ mod tests;
 pub mod ast;
 
 use self::ast::*;
-use lexer::{Lexer, TokenType};
+use lexer::{Lexer, Token, TokenType};
 use std::iter::Peekable;
 use std::result;
 
 type Result<T> = result::Result<T, String>;
 
 fn expect(tokens: &mut Peekable<Lexer>, expected: &TokenType) -> Result<()> {
-    match tokens.next().unwrap() {
-        ref found if expected == &found.token_type => Ok(()),
-        found => Err(format!("Expected {}, found {}", expected, found)),
+    match tokens.next() {
+        Some(ref found) if expected == &found.token_type => Ok(()),
+        Some(found) => Err(format!("Expected {}, found {}", expected, found)),
+        None => unreachable!(),
     }
 }
 
 pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
-    let token = tokens.peek().unwrap();
-    match token.token_type {
-        TokenType::Lambda => parse_abstraction(tokens),
-        TokenType::LeftBracket | TokenType::Identifier(_) => parse_application(tokens),
-        _ => Err(format!("Expected '\\', '(' or Variable, found {}", token)),
+    match tokens.peek() {
+        Some(token) => match token.token_type {
+            TokenType::Lambda => parse_abstraction(tokens),
+            TokenType::LeftBracket | TokenType::Identifier(_) => parse_application(tokens),
+            ref found => Err(format!("Expected '\\', '(' or Variable, found {}", found)),
+        },
+        None => unreachable!(),
     }
 }
 
@@ -38,7 +41,11 @@ fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
 
 fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ASTIdentifier>> {
     let mut parameters = vec![parse_identifier(tokens)?];
-    while let TokenType::Identifier(_) = tokens.peek().unwrap().token_type {
+    while let Some(Token {
+        token_type: TokenType::Identifier(_),
+        ..
+    }) = tokens.peek()
+    {
         parameters.push(parse_identifier(tokens)?);
     }
     Ok(parameters)
@@ -63,10 +70,12 @@ fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
 }
 
 fn parse_identifier(tokens: &mut Peekable<Lexer>) -> Result<ASTIdentifier> {
-    let token = tokens.next().unwrap();
-    match token.token_type {
-        TokenType::Identifier(variable) => Ok(ASTIdentifier::from(variable)),
-        _ => Err(format!("Expected Variable, found {}", token)),
+    match tokens.next() {
+        Some(token) => match token.token_type {
+            TokenType::Identifier(variable) => Ok(ASTIdentifier::from(variable)),
+            found => Err(format!("Expected Variable, found {}", found)),
+        },
+        None => unreachable!(),
     }
 }
 
