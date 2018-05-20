@@ -1,6 +1,6 @@
 use interpreter::{Abstraction, Application, Variable};
 
-use parser::ast::{ASTAbstraction, ASTApplication, ASTIdentifier, AST};
+use parser::ast::*;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -131,10 +131,10 @@ impl Expression {
     }
 }
 
-impl<'a> From<&'a AST> for Expression {
-    fn from(value: &AST) -> Self {
+impl<'a> From<&'a ASTExpression> for Expression {
+    fn from(value: &ASTExpression) -> Self {
         let mut result = match value {
-            AST::Abstraction(ASTAbstraction {
+            ASTExpression::Abstraction(ASTAbstraction {
                 parameters,
                 box expression,
             }) => {
@@ -147,7 +147,7 @@ impl<'a> From<&'a AST> for Expression {
                     },
                 ))
             }
-            AST::Application(ASTApplication { expressions }) => {
+            ASTExpression::Application(ASTApplication { expressions }) => {
                 let mut iter = expressions.iter();
                 let callee = iter.next().unwrap();
                 if let Some(argument) = iter.next() {
@@ -161,7 +161,7 @@ impl<'a> From<&'a AST> for Expression {
                     callee.into()
                 }
             }
-            AST::Identifier(identifier) => Expression::Variable(identifier.into()),
+            ASTExpression::Identifier(identifier) => Expression::Variable(identifier.into()),
         };
         result.assign_indices();
         result
@@ -184,7 +184,10 @@ mod test {
 
     #[test]
     fn translate_abstraction() {
-        let a = Expression::from(&AST::Abstraction(ASTAbstraction::new(vec!["x", "x"], "x")));
+        let a = Expression::from(&ASTExpression::Abstraction(ASTAbstraction::new(
+            vec!["x", "x"],
+            "x",
+        )));
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
             Expression::Abstraction(Abstraction::new(
@@ -194,11 +197,11 @@ mod test {
         ));
         assert_eq!(expected, a);
 
-        let b = Expression::from(&AST::Abstraction(ASTAbstraction::new(
+        let b = Expression::from(&ASTExpression::Abstraction(ASTAbstraction::new(
             vec!["x"],
             ASTApplication::new(vec![
-                AST::Abstraction(ASTAbstraction::new(vec!["x"], "x")),
-                AST::Identifier("x".into()),
+                ASTExpression::Abstraction(ASTAbstraction::new(vec!["x"], "x")),
+                ASTExpression::Identifier("x".into()),
             ]),
         )));
         let expected = Expression::Abstraction(Abstraction::new(
@@ -216,7 +219,9 @@ mod test {
 
     #[test]
     fn translate_application() {
-        let a = Expression::from(&AST::Application(ASTApplication::new(vec!["a", "b", "c"])));
+        let a = Expression::from(&ASTExpression::Application(ASTApplication::new(vec![
+            "a", "b", "c",
+        ])));
         let expected = Expression::Application(Application::new(
             Expression::Application(Application::new(
                 Expression::Variable(Variable::new(None, "a")),

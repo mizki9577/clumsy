@@ -1,29 +1,35 @@
 #[derive(Debug, PartialEq)]
 pub enum AST {
+    Expression(ASTExpression),
+    Let(ASTLet),
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ASTExpression {
     Abstraction(ASTAbstraction),
     Application(ASTApplication),
     Identifier(ASTIdentifier),
 }
 
-impl<T> From<T> for AST
+impl<T> From<T> for ASTExpression
 where
     T: Into<ASTIdentifier>,
 {
     fn from(value: T) -> Self {
-        AST::Identifier(value.into())
+        ASTExpression::Identifier(value.into())
     }
 }
 
 #[derive(Debug, PartialEq)]
 pub struct ASTAbstraction {
     pub parameters: Vec<ASTIdentifier>,
-    pub expression: Box<AST>,
+    pub expression: Box<ASTExpression>,
 }
 
 impl ASTAbstraction {
     pub fn new(
         parameters: impl IntoIterator<Item = impl Into<ASTIdentifier>>,
-        expression: impl Into<AST>,
+        expression: impl Into<ASTExpression>,
     ) -> Self {
         ASTAbstraction {
             parameters: parameters
@@ -35,19 +41,19 @@ impl ASTAbstraction {
     }
 }
 
-impl From<ASTAbstraction> for AST {
+impl From<ASTAbstraction> for ASTExpression {
     fn from(value: ASTAbstraction) -> Self {
-        AST::Abstraction(value)
+        ASTExpression::Abstraction(value)
     }
 }
 
 #[derive(Debug, PartialEq)]
 pub struct ASTApplication {
-    pub expressions: Vec<AST>,
+    pub expressions: Vec<ASTExpression>,
 }
 
 impl ASTApplication {
-    pub fn new(expressions: impl IntoIterator<Item = impl Into<AST>>) -> Self {
+    pub fn new(expressions: impl IntoIterator<Item = impl Into<ASTExpression>>) -> Self {
         ASTApplication {
             expressions: expressions
                 .into_iter()
@@ -57,9 +63,9 @@ impl ASTApplication {
     }
 }
 
-impl From<ASTApplication> for AST {
+impl From<ASTApplication> for ASTExpression {
     fn from(value: ASTApplication) -> Self {
-        AST::Application(value)
+        ASTExpression::Application(value)
     }
 }
 
@@ -72,5 +78,20 @@ where
 {
     fn from(value: T) -> Self {
         ASTIdentifier(value.into())
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ASTLet {
+    pub variable: ASTIdentifier,
+    pub expression: Box<ASTExpression>,
+}
+
+impl ASTLet {
+    pub fn new(variable: impl Into<ASTIdentifier>, expression: impl Into<ASTExpression>) -> Self {
+        ASTLet {
+            variable: variable.into(),
+            expression: box expression.into(),
+        }
     }
 }
