@@ -85,12 +85,14 @@ impl Expression {
                     expression: box expression.shift_impl(increment, c + 1),
                 })
             }
+
             Expression::Application(Application { callee, argument }) => {
                 Expression::Application(Application {
                     callee: box callee.shift_impl(increment, c),
                     argument: box argument.shift_impl(increment, c),
                 })
             }
+
             Expression::Variable(Variable {
                 index: Some(index),
                 ref name,
@@ -101,6 +103,7 @@ impl Expression {
                     name: name.to_owned(),
                 })
             }
+
             _ => self,
         }
     }
@@ -147,6 +150,7 @@ impl<'a> From<&'a ASTExpression> for Expression {
                     },
                 ))
             }
+
             ASTExpression::Application(ASTApplication { expressions }) => {
                 let mut iter = expressions.iter();
                 let callee = iter.next().unwrap();
@@ -161,6 +165,7 @@ impl<'a> From<&'a ASTExpression> for Expression {
                     callee.into()
                 }
             }
+
             ASTExpression::Identifier(identifier) => Expression::Variable(identifier.into()),
         };
         result.assign_indices();
