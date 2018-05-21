@@ -20,69 +20,68 @@ pub enum Expression {
 }
 
 impl Expression {
-    // Is this should be immutable?
     fn assign_indices(&mut self) {
-        self.assign_indices_impl(&mut HashMap::new())
-    }
+        fn assign_indices_impl<'a>(value: &'a mut Expression, table: &mut HashMap<&'a str, usize>) {
+            match value {
+                Expression::Abstraction { name, expression } => {
+                    let outer = table.get(name.as_str()).cloned();
+                    table.iter_mut().for_each(|(_, i)| *i += 1);
+                    table.insert(name, 0);
 
-    fn assign_indices_impl<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
-        match self {
-            Expression::Abstraction { name, expression } => {
-                let outer = table.get(name.as_str()).cloned();
-                table.iter_mut().for_each(|(_, i)| *i += 1);
-                table.insert(name, 0);
+                    assign_indices_impl(expression, table);
 
-                expression.assign_indices_impl(table);
+                    table.remove(name.as_str());
+                    table.iter_mut().for_each(|(_, i)| *i -= 1);
+                    if let Some(i) = outer {
+                        table.insert(name, i);
+                    }
+                }
 
-                table.remove(name.as_str());
-                table.iter_mut().for_each(|(_, i)| *i -= 1);
-                if let Some(i) = outer {
-                    table.insert(name, i);
+                Expression::Application { callee, argument } => {
+                    assign_indices_impl(callee, table);
+                    assign_indices_impl(argument, table);
+                }
+
+                Expression::Variable { name, index } => {
+                    *index = table.get(name.as_str()).cloned();
                 }
             }
-
-            Expression::Application { callee, argument } => {
-                callee.assign_indices_impl(table);
-                argument.assign_indices_impl(table);
-            }
-
-            Expression::Variable { name, index } => {
-                *index = table.get(name.as_str()).cloned();
-            }
         }
+
+        assign_indices_impl(self, &mut HashMap::new())
     }
 
     pub fn evaluate(self) -> Self {
-        match self.evaluate1() {
+        fn evaluate1(value: Expression) -> Result<Expression, Expression> {
+            match value {
+                Expression::Application {
+                    callee: box Expression::Abstraction { expression, .. },
+                    box argument,
+                } => Ok(expression
+                    .substituted(0, argument.shifted(1, 0))
+                    .shifted(-1, 0)),
+
+                Expression::Application {
+                    callee: box callee,
+                    box argument,
+                } => match evaluate1(callee) {
+                    Ok(callee) => Ok(Expression::Application {
+                        callee: box callee,
+                        argument: box argument,
+                    }),
+                    Err(callee) => Err(Expression::Application {
+                        callee: box callee,
+                        argument: box argument,
+                    }),
+                },
+
+                _ => Err(value),
+            }
+        }
+
+        match evaluate1(self) {
             Ok(result) => result.evaluate(),
             Err(result) => result,
-        }
-    }
-
-    fn evaluate1(self) -> Result<Self, Self> {
-        match self {
-            Expression::Application {
-                callee: box Expression::Abstraction { expression, .. },
-                box argument,
-            } => Ok(expression
-                .substituted(0, argument.shifted(1, 0))
-                .shifted(-1, 0)),
-
-            Expression::Application {
-                callee: box callee,
-                box argument,
-            } => match callee.evaluate1() {
-                Ok(callee) => Ok(Expression::Application {
-                    callee: box callee,
-                    argument: box argument,
-                }),
-                Err(callee) => Err(Expression::Application {
-                    callee: box callee,
-                    argument: box argument,
-                }),
-            },
-
-            _ => Err(self),
         }
     }
 
