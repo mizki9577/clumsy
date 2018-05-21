@@ -1,5 +1,8 @@
 #[derive(Debug, PartialEq)]
-pub enum AST {
+pub struct ASTProgram(pub Vec<ASTDirective>);
+
+#[derive(Debug, PartialEq)]
+pub enum ASTDirective {
     Expression(ASTExpression),
     Let(ASTLet),
 }

@@ -173,9 +173,27 @@ impl<'a> From<&'a ASTExpression> for Expression {
     }
 }
 
-impl<'a> From<&'a AST> for Expression {
-    fn from(_value: &AST) -> Self {
-        unimplemented!()
+impl<'a> From<&'a ASTProgram> for Expression {
+    fn from(value: &ASTProgram) -> Self {
+        let ASTProgram(directives) = value;
+
+        let mut iter = directives.iter().rev();
+        if let Some(ASTDirective::Expression(result)) = iter.next() {
+            let mut result = iter.fold(result.into(), |result, directive| match directive {
+                ASTDirective::Expression(..) => unimplemented!(),
+                ASTDirective::Let(ASTLet {
+                    variable: ASTIdentifier(variable),
+                    box expression,
+                }) => Expression::Application(Application::new(
+                    Expression::Abstraction(Abstraction::new(variable, result)),
+                    expression.into(),
+                )),
+            });
+            result.assign_indices(); // FIXME: We are currently calling this twice. DAS IST GUT NICHT.
+            result
+        } else {
+            unimplemented!()
+        }
     }
 }
 

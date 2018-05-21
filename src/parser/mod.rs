@@ -15,20 +15,22 @@ fn expect(tokens: &mut Peekable<Lexer>, expected: &TokenType) -> Result<()> {
     }
 }
 
-pub fn parse(tokens: &mut Peekable<Lexer>) -> Result<AST> {
-    match tokens.peek() {
-        Some(token) => match token.token_type {
+pub fn parse(tokens: &mut Peekable<Lexer>) -> Result<ASTProgram> {
+    let mut directives = Vec::new();
+
+    while let Some(token) = tokens.peek() {
+        match token.token_type {
             TokenType::Lambda | TokenType::LeftBracket | TokenType::Identifier(_) => {
-                Ok(AST::Expression(parse_expression(tokens)?))
+                directives.push(ASTDirective::Expression(parse_expression(tokens)?))
             }
-            TokenType::Let => Ok(AST::Let(parse_let(tokens)?)),
-            ref found => Err(format!(
-                "Expected '\\', '(', 'let' or Variable, found {}",
-                found
-            )),
-        },
-        None => unreachable!(),
+
+            TokenType::Let => directives.push(ASTDirective::Let(parse_let(tokens)?)),
+
+            _ => break,
+        }
     }
+
+    Ok(ASTProgram(directives))
 }
 
 pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
@@ -80,6 +82,10 @@ fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ASTApplication> {
                 expression
             }
             TokenType::Lambda => ASTExpression::Abstraction(parse_abstraction(tokens)?),
+            TokenType::Semicolon => {
+                expect(tokens, &TokenType::Semicolon)?;
+                break;
+            }
             _ => break,
         });
     }
