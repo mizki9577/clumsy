@@ -76,7 +76,6 @@ fn eval(source: &str) {
     let tokens = &mut Lexer::new(source).peekable();
     match parser::parse(tokens).map(|ast| {
         let expression = Expression::from(&ast);
-        println!("{}", expression);
         expression.evaluate()
     }) {
         Ok(result) => println!("{}", result),
