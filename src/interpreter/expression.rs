@@ -55,7 +55,9 @@ impl Expression {
             Expression::Application(Application {
                 callee: box Expression::Abstraction(Abstraction { expression, .. }),
                 box argument,
-            }) => Ok(expression.substituted(0, argument.shifted(0)).unshifted(0)),
+            }) => Ok(expression
+                .substituted(0, argument.shifted(1, 0))
+                .shifted(-1, 0)),
 
             Expression::Application(Application {
                 callee: box Expression::Application(callee),
@@ -69,27 +71,19 @@ impl Expression {
         }
     }
 
-    fn shifted(self, c: usize) -> Self {
-        self.shift_impl(true, c)
-    }
-
-    fn unshifted(self, c: usize) -> Self {
-        self.shift_impl(false, c)
-    }
-
-    fn shift_impl(self, increment: bool, c: usize) -> Self {
+    fn shifted(self, d: isize, c: usize) -> Self {
         match self {
             Expression::Abstraction(Abstraction { name, expression }) => {
                 Expression::Abstraction(Abstraction {
                     name,
-                    expression: box expression.shift_impl(increment, c + 1),
+                    expression: box expression.shifted(d, c + 1),
                 })
             }
 
             Expression::Application(Application { callee, argument }) => {
                 Expression::Application(Application {
-                    callee: box callee.shift_impl(increment, c),
-                    argument: box argument.shift_impl(increment, c),
+                    callee: box callee.shifted(d, c),
+                    argument: box argument.shifted(d, c),
                 })
             }
 
@@ -99,7 +93,7 @@ impl Expression {
             }) if index >= c =>
             {
                 Expression::Variable(Variable {
-                    index: Some(if increment { index + 1 } else { index - 1 }),
+                    index: Some((index as isize + d) as usize),
                     name: name.to_owned(),
                 })
             }
@@ -113,7 +107,7 @@ impl Expression {
             Expression::Abstraction(Abstraction { name, expression }) => {
                 Expression::Abstraction(Abstraction {
                     name,
-                    expression: box expression.substituted(j + 1, term.shifted(0)),
+                    expression: box expression.substituted(j + 1, term.shifted(1, 0)),
                 })
             }
             Expression::Application(Application { callee, argument }) => {
@@ -264,11 +258,11 @@ mod test {
     #[test]
     fn test_shift() {
         let expected = Expression::Variable(Variable::new(Some(1), "x"));
-        let result = Expression::Variable(Variable::new(Some(0), "x")).shift_impl(true, 0);
+        let result = Expression::Variable(Variable::new(Some(0), "x")).shifted(1, 0);
         assert_eq!(expected, result);
 
         let expected = Expression::Variable(Variable::new(Some(0), "x"));
-        let result = Expression::Variable(Variable::new(Some(0), "x")).shift_impl(true, 1);
+        let result = Expression::Variable(Variable::new(Some(0), "x")).shifted(1, 1);
         assert_eq!(expected, result);
 
         let expected = Expression::Abstraction(Abstraction::new(
@@ -278,7 +272,7 @@ mod test {
         let result = Expression::Abstraction(Abstraction::new(
             "x",
             Expression::Variable(Variable::new(Some(1), "y")),
-        )).shift_impl(true, 0);
+        )).shifted(1, 0);
         assert_eq!(expected, result);
 
         let expected = Expression::Abstraction(Abstraction::new(
@@ -288,7 +282,7 @@ mod test {
         let result = Expression::Abstraction(Abstraction::new(
             "x",
             Expression::Variable(Variable::new(Some(0), "x")),
-        )).shift_impl(true, 0);
+        )).shifted(1, 0);
         assert_eq!(expected, result);
 
         let expected = Expression::Application(Application::new(
@@ -298,7 +292,7 @@ mod test {
         let result = Expression::Application(Application::new(
             Expression::Variable(Variable::new(Some(0), "x")),
             Expression::Variable(Variable::new(Some(1), "y")),
-        )).shift_impl(true, 0);
+        )).shifted(1, 0);
         assert_eq!(expected, result);
     }
 
