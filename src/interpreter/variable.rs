@@ -26,6 +26,6 @@ impl<'a> From<&'a ASTIdentifier> for Variable {
 
 impl Display for Variable {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, r"{}", self.name)
+        write!(f, r"{}:{}", self.name, self.index.unwrap_or(42))
     }
 }

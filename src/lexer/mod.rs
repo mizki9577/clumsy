@@ -47,6 +47,7 @@ impl<'a> Iterator for Lexer<'a> {
             Some('\\') => TokenType::Lambda,
             Some('.') => TokenType::Dot,
             Some('=') => TokenType::Equal,
+            Some(';') => TokenType::Semicolon,
             Some(c) if c.is_ascii_alphanumeric() || c == '_' => {
                 let mut word = String::new();
                 word.push(c);
