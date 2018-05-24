@@ -1,5 +1,3 @@
-pub mod ast;
-
 use self::ast::*;
 use lexer::{Lexer, TokenType};
 use std::iter::Peekable;
