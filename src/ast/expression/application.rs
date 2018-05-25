@@ -6,7 +6,7 @@ pub struct ApplicationExpression {
 }
 
 impl ApplicationExpression {
-    fn new<T>(expressions: T) -> ApplicationExpression
+    pub fn new<T>(expressions: T) -> ApplicationExpression
     where
         T: Into<Vec<Expression>>,
     {

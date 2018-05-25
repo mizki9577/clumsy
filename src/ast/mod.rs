@@ -9,7 +9,7 @@ pub use self::statement::*;
 pub struct Identifier(pub String);
 
 impl Identifier {
-    fn new<T>(value: T) -> Identifier
+    pub fn new<T>(value: T) -> Identifier
     where
         T: Into<String>,
     {
