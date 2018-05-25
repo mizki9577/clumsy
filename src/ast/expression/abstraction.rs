@@ -7,7 +7,7 @@ pub struct AbstractionExpression {
 }
 
 impl AbstractionExpression {
-    fn new<T, U>(parameters: T, expression: U) -> AbstractionExpression
+    pub fn new<T, U>(parameters: T, expression: U) -> AbstractionExpression
     where
         T: Into<Vec<Identifier>>,
         U: Into<Expression>,

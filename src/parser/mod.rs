@@ -1,4 +1,4 @@
-use self::ast::*;
+use ast;
 use lexer::{Lexer, TokenType};
 use std::iter::Peekable;
 use std::result;
@@ -13,30 +13,30 @@ fn expect(tokens: &mut Peekable<Lexer>, expected: &TokenType) -> Result<()> {
     }
 }
 
-pub fn parse(tokens: &mut Peekable<Lexer>) -> Result<ASTProgram> {
-    let mut directives = Vec::new();
+pub fn parse(tokens: &mut Peekable<Lexer>) -> Result<ast::Program> {
+    let mut statements = Vec::new();
 
     while let Some(token) = tokens.peek() {
         match token.token_type {
             TokenType::Lambda
             | TokenType::LeftBracket
             | TokenType::Let
-            | TokenType::Identifier(_) => directives.push(parse_directive(tokens)?),
+            | TokenType::Identifier(_) => statements.push(parse_statement(tokens)?),
             _ => break,
         }
     }
 
-    Ok(ASTProgram(directives))
+    Ok(ast::Program(statements))
 }
 
-fn parse_directive(tokens: &mut Peekable<Lexer>) -> Result<ASTDirective> {
+fn parse_statement(tokens: &mut Peekable<Lexer>) -> Result<ast::Statement> {
     let result = match tokens.peek() {
         Some(token) => match token.token_type {
             TokenType::Lambda | TokenType::LeftBracket | TokenType::Identifier(_) => {
-                ASTDirective::Expression(parse_expression(tokens)?)
+                ast::Statement::from(parse_expression(tokens)?)
             }
 
-            TokenType::Let => ASTDirective::Let(parse_let(tokens)?),
+            TokenType::Let => ast::Statement::from(parse_let(tokens)?),
 
             ref found => {
                 return Err(format!(
@@ -51,12 +51,12 @@ fn parse_directive(tokens: &mut Peekable<Lexer>) -> Result<ASTDirective> {
     Ok(result)
 }
 
-pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
+pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
     match tokens.peek() {
         Some(token) => match token.token_type {
-            TokenType::Lambda => Ok(ASTExpression::Abstraction(parse_abstraction(tokens)?)),
+            TokenType::Lambda => Ok(ast::Expression::from(parse_abstraction(tokens)?)),
             TokenType::LeftBracket | TokenType::Identifier(_) => {
-                Ok(ASTExpression::Application(parse_application(tokens)?))
+                Ok(ast::Expression::from(parse_application(tokens)?))
             }
             ref found => Err(format!("Expected '\\', '(' or Variable, found {}", found)),
         },
@@ -64,15 +64,15 @@ pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ASTExpression> {
     }
 }
 
-fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<ASTAbstraction> {
+fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<ast::AbstractionExpression> {
     expect(tokens, &TokenType::Lambda)?;
     let parameters = parse_parameters(tokens)?;
     expect(tokens, &TokenType::Dot)?;
     let expression = parse_expression(tokens)?;
-    Ok(ASTAbstraction::new(parameters, expression))
+    Ok(ast::AbstractionExpression::new(parameters, expression))
 }
 
-fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ASTIdentifier>> {
+fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ast::Identifier>> {
     let mut parameters = Vec::new();
     loop {
         if let Some(token) = tokens.peek() {
@@ -88,40 +88,40 @@ fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ASTIdentifier>> 
     Ok(parameters)
 }
 
-fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ASTApplication> {
+fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::ApplicationExpression> {
     let mut expressions = Vec::new();
     while let Some(token) = tokens.peek() {
         expressions.push(match token.token_type {
-            TokenType::Identifier(_) => ASTExpression::Identifier(parse_identifier(tokens)?),
+            TokenType::Identifier(_) => ast::Expression::from(parse_identifier(tokens)?),
             TokenType::LeftBracket => {
                 expect(tokens, &TokenType::LeftBracket)?;
                 let expression = parse_expression(tokens)?;
                 expect(tokens, &TokenType::RightBracket)?;
                 expression
             }
-            TokenType::Lambda => ASTExpression::Abstraction(parse_abstraction(tokens)?),
+            TokenType::Lambda => ast::Expression::from(parse_abstraction(tokens)?),
             _ => break,
         });
     }
-    Ok(ASTApplication::new(expressions))
+    Ok(ast::ApplicationExpression::new(expressions))
 }
 
-fn parse_identifier(tokens: &mut Peekable<Lexer>) -> Result<ASTIdentifier> {
+fn parse_identifier(tokens: &mut Peekable<Lexer>) -> Result<ast::Identifier> {
     match tokens.next() {
         Some(token) => match token.token_type {
-            TokenType::Identifier(variable) => Ok(ASTIdentifier::from(variable)),
+            TokenType::Identifier(variable) => Ok(ast::Identifier::new(variable)),
             found => Err(format!("Expected Variable, found {}", found)),
         },
         None => unreachable!(),
     }
 }
 
-fn parse_let(tokens: &mut Peekable<Lexer>) -> Result<ASTLet> {
+fn parse_let(tokens: &mut Peekable<Lexer>) -> Result<ast::LetStatement> {
     expect(tokens, &TokenType::Let)?;
     let variable = parse_identifier(tokens)?;
     expect(tokens, &TokenType::Equal)?;
     let expression = parse_expression(tokens)?;
-    Ok(ASTLet::new(variable, expression))
+    Ok(ast::LetStatement::new(variable, expression))
 }
 
 #[cfg(test)]

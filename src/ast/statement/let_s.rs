@@ -7,7 +7,7 @@ pub struct LetStatement {
 }
 
 impl LetStatement {
-    fn new<T, U>(variable: T, expression: U) -> LetStatement
+    pub fn new<T, U>(variable: T, expression: U) -> LetStatement
     where
         T: Into<Identifier>,
         U: Into<Expression>,

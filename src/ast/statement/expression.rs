@@ -6,7 +6,7 @@ pub struct ExpressionStatement {
 }
 
 impl ExpressionStatement {
-    fn new<T>(expression: T) -> ExpressionStatement
+    pub fn new<T>(expression: T) -> ExpressionStatement
     where
         T: Into<Expression>,
     {
