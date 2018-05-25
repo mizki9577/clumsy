@@ -1,4 +1,4 @@
-use parser::ast::*;
+use ast;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -136,28 +136,28 @@ impl Expression {
     }
 }
 
-impl<'a> From<&'a ASTExpression> for Expression {
-    fn from(value: &ASTExpression) -> Self {
+impl<'a> From<&'a ast::Expression> for Expression {
+    fn from(value: &ast::Expression) -> Self {
         let mut result = match value {
-            ASTExpression::Abstraction(ASTAbstraction {
+            ast::Expression::Abstraction(ast::AbstractionExpression {
                 parameters,
                 box expression,
             }) => {
                 let mut iter = parameters.iter();
-                let ASTIdentifier(parameter) = iter.next_back().unwrap();
+                let ast::Identifier(parameter) = iter.next_back().unwrap();
                 iter.rfold(
                     Expression::Abstraction {
                         name: parameter.to_owned(),
                         expression: box expression.into(),
                     },
-                    |body, ASTIdentifier(parameter)| Expression::Abstraction {
+                    |body, ast::Identifier(parameter)| Expression::Abstraction {
                         name: parameter.to_owned(),
                         expression: box body,
                     },
                 )
             }
 
-            ASTExpression::Application(ASTApplication { expressions }) => {
+            ast::Expression::Application(ast::ApplicationExpression { expressions }) => {
                 let mut iter = expressions.iter();
                 let callee = iter.next().unwrap();
                 if let Some(argument) = iter.next() {
@@ -176,7 +176,7 @@ impl<'a> From<&'a ASTExpression> for Expression {
                 }
             }
 
-            ASTExpression::Identifier(ASTIdentifier(identifier)) => Expression::Variable {
+            ast::Expression::Variable(ast::Identifier(identifier)) => Expression::Variable {
                 name: identifier.to_owned(),
                 index: None,
             },
@@ -186,17 +186,19 @@ impl<'a> From<&'a ASTExpression> for Expression {
     }
 }
 
-impl<'a> From<&'a ASTProgram> for Expression {
-    fn from(value: &ASTProgram) -> Self {
-        let ASTProgram(directives) = value;
+impl<'a> From<&'a ast::Program> for Expression {
+    fn from(value: &ast::Program) -> Self {
+        let ast::Program(statements) = value;
 
-        let mut iter = directives.iter().rev();
-        if let Some(ASTDirective::Expression(result)) = iter.next() {
-            let mut result = iter.fold(result.into(), |result, directive| match directive {
-                ASTDirective::Expression(..) => unimplemented!(),
-                ASTDirective::Let(ASTLet {
-                    variable: ASTIdentifier(variable),
-                    box expression,
+        let mut iter = statements.iter().rev();
+        if let Some(ast::Statement::Expression(ast::ExpressionStatement { expression: result })) =
+            iter.next()
+        {
+            let mut result = iter.fold(result.into(), |result, statement| match statement {
+                ast::Statement::Expression(..) => unimplemented!(),
+                ast::Statement::Let(ast::LetStatement {
+                    variable: ast::Identifier(variable),
+                    expression,
                 }) => Expression::Application {
                     callee: box Expression::Abstraction {
                         name: variable.to_owned(),

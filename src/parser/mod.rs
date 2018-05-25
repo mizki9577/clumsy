@@ -33,10 +33,10 @@ fn parse_statement(tokens: &mut Peekable<Lexer>) -> Result<ast::Statement> {
     let result = match tokens.peek() {
         Some(token) => match token.token_type {
             TokenType::Lambda | TokenType::LeftBracket | TokenType::Identifier(_) => {
-                ast::Statement::from(parse_expression(tokens)?)
+                ast::ExpressionStatement::new(parse_expression(tokens)?).into()
             }
 
-            TokenType::Let => ast::Statement::from(parse_let(tokens)?),
+            TokenType::Let => parse_let(tokens)?.into(),
 
             ref found => {
                 return Err(format!(
@@ -54,9 +54,9 @@ fn parse_statement(tokens: &mut Peekable<Lexer>) -> Result<ast::Statement> {
 pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
     match tokens.peek() {
         Some(token) => match token.token_type {
-            TokenType::Lambda => Ok(ast::Expression::from(parse_abstraction(tokens)?)),
+            TokenType::Lambda => Ok(parse_abstraction(tokens)?.into()),
             TokenType::LeftBracket | TokenType::Identifier(_) => {
-                Ok(ast::Expression::from(parse_application(tokens)?))
+                Ok(parse_application(tokens)?.into())
             }
             ref found => Err(format!("Expected '\\', '(' or Variable, found {}", found)),
         },
@@ -92,14 +92,14 @@ fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::ApplicationExp
     let mut expressions = Vec::new();
     while let Some(token) = tokens.peek() {
         expressions.push(match token.token_type {
-            TokenType::Identifier(_) => ast::Expression::from(parse_identifier(tokens)?),
+            TokenType::Identifier(_) => parse_identifier(tokens)?.into(),
             TokenType::LeftBracket => {
                 expect(tokens, &TokenType::LeftBracket)?;
                 let expression = parse_expression(tokens)?;
                 expect(tokens, &TokenType::RightBracket)?;
                 expression
             }
-            TokenType::Lambda => ast::Expression::from(parse_abstraction(tokens)?),
+            TokenType::Lambda => parse_abstraction(tokens)?.into(),
             _ => break,
         });
     }
