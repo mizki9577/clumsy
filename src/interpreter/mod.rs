@@ -1,3 +1,10 @@
+mod abstraction;
+mod application;
+mod variable;
+pub use self::abstraction::*;
+pub use self::application::*;
+pub use self::variable::*;
+
 use ast;
 use std::collections::HashMap;
 use std::fmt;
@@ -5,25 +12,20 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
-    Abstraction {
-        name: String,
-        expression: Box<Expression>,
-    },
-    Application {
-        callee: Box<Expression>,
-        argument: Box<Expression>,
-    },
-    Variable {
-        index: Option<usize>,
-        name: String,
-    },
+    Variable(Variable),
+    Abstraction(Abstraction),
+    Application(Application),
 }
 
 impl Expression {
     fn assign_indices(&mut self) {
         fn assign_indices_impl<'a>(value: &'a mut Expression, table: &mut HashMap<&'a str, usize>) {
             match value {
-                Expression::Abstraction { name, expression } => {
+                Expression::Variable(Variable { name, index }) => {
+                    *index = table.get(name.as_str()).cloned();
+                }
+
+                Expression::Abstraction(Abstraction { name, expression }) => {
                     let outer = table.get(name.as_str()).cloned();
                     table.iter_mut().for_each(|(_, i)| *i += 1);
                     table.insert(name, 0);
@@ -37,13 +39,9 @@ impl Expression {
                     }
                 }
 
-                Expression::Application { callee, argument } => {
+                Expression::Application(Application { callee, argument }) => {
                     assign_indices_impl(callee, table);
                     assign_indices_impl(argument, table);
-                }
-
-                Expression::Variable { name, index } => {
-                    *index = table.get(name.as_str()).cloned();
                 }
             }
         }
@@ -54,25 +52,25 @@ impl Expression {
     pub fn evaluate(self) -> Self {
         fn evaluate1(value: Expression) -> Result<Expression, Expression> {
             match value {
-                Expression::Application {
-                    callee: box Expression::Abstraction { expression, .. },
+                Expression::Application(Application {
+                    callee: box Expression::Abstraction(Abstraction { expression, .. }),
                     box argument,
-                } => Ok(expression
+                }) => Ok(expression
                     .substituted(0, argument.shifted(1, 0))
                     .shifted(-1, 0)),
 
-                Expression::Application {
+                Expression::Application(Application {
                     callee: box callee,
                     box argument,
-                } => match evaluate1(callee) {
-                    Ok(callee) => Ok(Expression::Application {
+                }) => match evaluate1(callee) {
+                    Ok(callee) => Ok(Expression::Application(Application {
                         callee: box callee,
                         argument: box argument,
-                    }),
-                    Err(callee) => Err(Expression::Application {
+                    })),
+                    Err(callee) => Err(Expression::Application(Application {
                         callee: box callee,
                         argument: box argument,
-                    }),
+                    })),
                 },
 
                 _ => Err(value),
@@ -87,51 +85,60 @@ impl Expression {
 
     fn shifted(self, d: isize, c: usize) -> Self {
         match self {
-            Expression::Abstraction { name, expression } => Expression::Abstraction {
-                name,
-                expression: box expression.shifted(d, c + 1),
-            },
-
-            Expression::Application { callee, argument } => Expression::Application {
-                callee: box callee.shifted(d, c),
-                argument: box argument.shifted(d, c),
-            },
-
-            Expression::Variable {
+            Expression::Variable(Variable {
                 index: Some(index),
                 ref name,
-            } if index >= c =>
+            }) if index >= c =>
             {
-                Expression::Variable {
+                Expression::Variable(Variable {
                     index: Some((index as isize + d) as usize),
                     name: name.to_owned(),
-                }
+                })
             }
 
-            _ => self,
+            Expression::Variable(_) => self,
+
+            Expression::Abstraction(Abstraction { name, expression }) => {
+                Expression::Abstraction(Abstraction {
+                    name,
+                    expression: box expression.shifted(d, c + 1),
+                })
+            }
+
+            Expression::Application(Application { callee, argument }) => {
+                Expression::Application(Application {
+                    callee: box callee.shifted(d, c),
+                    argument: box argument.shifted(d, c),
+                })
+            }
         }
     }
 
     fn substituted(self, j: usize, term: Expression) -> Self {
         match self {
-            Expression::Abstraction { name, expression } => Expression::Abstraction {
-                name,
-                expression: box expression.substituted(j + 1, term.shifted(1, 0)),
-            },
-            Expression::Application { callee, argument } => {
-                let cloned_term = term.clone();
-                Expression::Application {
-                    callee: box callee.substituted(j, term),
-                    argument: box argument.substituted(j, cloned_term),
-                }
-            }
-            Expression::Variable {
+            Expression::Variable(Variable {
                 index: Some(index), ..
-            } if index == j =>
+            }) if index == j =>
             {
                 term
             }
-            _ => self,
+
+            Expression::Variable(_) => self,
+
+            Expression::Abstraction(Abstraction { name, expression }) => {
+                Expression::Abstraction(Abstraction {
+                    name,
+                    expression: box expression.substituted(j + 1, term.shifted(1, 0)),
+                })
+            }
+
+            Expression::Application(Application { callee, argument }) => {
+                let cloned_term = term.clone();
+                Expression::Application(Application {
+                    callee: box callee.substituted(j, term),
+                    argument: box argument.substituted(j, cloned_term),
+                })
+            }
         }
     }
 }
@@ -139,48 +146,15 @@ impl Expression {
 impl<'a> From<&'a ast::Expression> for Expression {
     fn from(value: &ast::Expression) -> Self {
         let mut result = match value {
-            ast::Expression::Abstraction(ast::AbstractionExpression {
-                parameters,
-                box expression,
-            }) => {
-                let mut iter = parameters.iter();
-                let ast::Identifier(parameter) = iter.next_back().unwrap();
-                iter.rfold(
-                    Expression::Abstraction {
-                        name: parameter.to_owned(),
-                        expression: box expression.into(),
-                    },
-                    |body, ast::Identifier(parameter)| Expression::Abstraction {
-                        name: parameter.to_owned(),
-                        expression: box body,
-                    },
-                )
+            ast::Expression::Variable(variable) => Expression::Variable(variable.into()),
+
+            ast::Expression::Abstraction(abstraction) => {
+                Expression::Abstraction(abstraction.into())
             }
 
-            ast::Expression::Application(ast::ApplicationExpression { expressions }) => {
-                let mut iter = expressions.iter();
-                let callee = iter.next().unwrap();
-                if let Some(argument) = iter.next() {
-                    iter.fold(
-                        Expression::Application {
-                            callee: box callee.into(),
-                            argument: box argument.into(),
-                        },
-                        |callee, argument| Expression::Application {
-                            callee: box callee,
-                            argument: box argument.into(),
-                        },
-                    )
-                } else {
-                    callee.into()
-                }
-            }
-
-            ast::Expression::Variable(ast::Identifier(identifier)) => Expression::Variable {
-                name: identifier.to_owned(),
-                index: None,
-            },
+            ast::Expression::Application(application) => application.into(),
         };
+
         result.assign_indices();
         result
     }
@@ -199,13 +173,13 @@ impl<'a> From<&'a ast::Program> for Expression {
                 ast::Statement::Let(ast::LetStatement {
                     variable: ast::Identifier(variable),
                     expression,
-                }) => Expression::Application {
-                    callee: box Expression::Abstraction {
+                }) => Expression::Application(Application {
+                    callee: box Expression::Abstraction(Abstraction {
                         name: variable.to_owned(),
                         expression: box result,
-                    },
+                    }),
                     argument: box expression.into(),
-                },
+                }),
             });
             result.assign_indices(); // FIXME: We are currently calling this twice. DAS IST GUT NICHT.
             result
@@ -218,11 +192,13 @@ impl<'a> From<&'a ast::Program> for Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Expression::Abstraction { name, expression } => {
+            Expression::Abstraction(Abstraction { name, expression }) => {
                 write!(f, r"(\{}. {})", name, expression)
             }
-            Expression::Application { callee, argument } => write!(f, r"({} {})", callee, argument),
-            Expression::Variable { name, .. } => write!(f, r"{}", name),
+            Expression::Application(Application { callee, argument }) => {
+                write!(f, r"({} {})", callee, argument)
+            }
+            Expression::Variable(Variable { name, .. }) => write!(f, r"{}", name),
         }
     }
 }
@@ -233,10 +209,9 @@ mod test {
 
     #[test]
     fn translate_abstraction() {
-        let a = Expression::from(&ASTExpression::Abstraction(ASTAbstraction::new(
-            vec!["x", "x"],
-            "x",
-        )));
+        let a = Expression::from(&ast::Expression::Abstraction(
+            ast::AbstractionExpression::new(&["x", "x"], "x"),
+        ));
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
             Expression::Abstraction(Abstraction::new(
@@ -246,13 +221,15 @@ mod test {
         ));
         assert_eq!(expected, a);
 
-        let b = Expression::from(&ASTExpression::Abstraction(ASTAbstraction::new(
-            vec!["x"],
-            ASTApplication::new(vec![
-                ASTExpression::Abstraction(ASTAbstraction::new(vec!["x"], "x")),
-                ASTExpression::Identifier("x".into()),
-            ]),
-        )));
+        let b = Expression::from(&ast::Expression::Abstraction(
+            ast::AbstractionExpression::new(
+                &["x"],
+                ast::ApplicationExpression::new(&[
+                    ast::Expression::Abstraction(ast::AbstractionExpression::new(&["x"], "x")),
+                    ast::Expression::Identifier("x".into()),
+                ]),
+            ),
+        ));
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
             Expression::Application(Application::new(
@@ -268,9 +245,9 @@ mod test {
 
     #[test]
     fn translate_application() {
-        let a = Expression::from(&ASTExpression::Application(ASTApplication::new(vec![
-            "a", "b", "c",
-        ])));
+        let a = Expression::from(&ast::Expression::Application(
+            ast::ApplicationExpression::new(&["a", "b", "c"]),
+        ));
         let expected = Expression::Application(Application::new(
             Expression::Application(Application::new(
                 Expression::Variable(Variable::new(None, "a")),

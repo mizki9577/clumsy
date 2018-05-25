@@ -131,11 +131,11 @@ mod test {
     #[test]
     fn test_parse_abstraction() {
         let result = parse_abstraction(&mut Lexer::new("\\x y. x").peekable());
-        let expected = Ok(ASTAbstraction::new(
-            vec![ASTIdentifier::from("x"), ASTIdentifier::from("y")],
-            ASTExpression::Application(ASTApplication::new(vec![ASTExpression::Identifier(
-                ASTIdentifier::from("x"),
-            )])),
+        let expected = Ok(ast::AbstractionExpression::new(
+            &[ast::Identifier::from("x"), ast::Identifier::from("y")],
+            ast::Expression::Application(ast::ApplicationExpression::new(&[
+                ast::Expression::Identifier(ast::Identifier::from("x")),
+            ])),
         ));
         assert_eq!(expected, result);
     }
@@ -143,10 +143,10 @@ mod test {
     #[test]
     fn test_parse_application() {
         let result = parse_application(&mut Lexer::new("x y z").peekable());
-        let expected = Ok(ASTApplication::new(vec![
-            ASTExpression::Identifier(ASTIdentifier::from("x")),
-            ASTExpression::Identifier(ASTIdentifier::from("y")),
-            ASTExpression::Identifier(ASTIdentifier::from("z")),
+        let expected = Ok(ast::ApplicationExpression::new(&[
+            ast::Expression::Identifier(ast::Identifier::from("x")),
+            ast::Expression::Identifier(ast::Identifier::from("y")),
+            ast::Expression::Identifier(ast::Identifier::from("z")),
         ]));
         assert_eq!(expected, result);
     }
@@ -154,10 +154,10 @@ mod test {
     #[test]
     fn test_parse_paratemers() {
         let result = parse_parameters(&mut Lexer::new("x y z").peekable());
-        let expected = Ok(vec![
-            ASTIdentifier::from("x"),
-            ASTIdentifier::from("y"),
-            ASTIdentifier::from("z"),
+        let expected = Ok(&[
+            ast::Identifier::from("x"),
+            ast::Identifier::from("y"),
+            ast::Identifier::from("z"),
         ]);
         assert_eq!(expected, result);
     }
