@@ -1,20 +1,20 @@
 mod abstraction;
 mod application;
+mod variable;
 pub use self::abstraction::*;
 pub use self::application::*;
-
-use ast::Identifier;
+pub use self::variable::*;
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
-    Variable(Identifier),
+    Variable(VariableExpression),
     Abstraction(AbstractionExpression),
     Application(ApplicationExpression),
 }
 
-impl From<Identifier> for Expression {
-    fn from(identifier: Identifier) -> Expression {
-        Expression::Variable(identifier)
+impl From<VariableExpression> for Expression {
+    fn from(variable: VariableExpression) -> Expression {
+        Expression::Variable(variable)
     }
 }
 

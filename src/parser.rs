@@ -92,7 +92,9 @@ fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::ApplicationExp
     let mut expressions = Vec::new();
     while let Some(token) = tokens.peek() {
         expressions.push(match token.token_type {
-            TokenType::Identifier(_) => parse_identifier(tokens)?.into(),
+            TokenType::Identifier(_) => {
+                ast::Expression::from(ast::VariableExpression::new(parse_identifier(tokens)?))
+            }
             TokenType::LeftBracket => {
                 expect(tokens, &TokenType::LeftBracket)?;
                 let expression = parse_expression(tokens)?;
