@@ -146,7 +146,9 @@ impl Expression {
 impl<'a> From<&'a ast::Expression> for Expression {
     fn from(value: &ast::Expression) -> Self {
         let mut result = match value {
-            ast::Expression::Variable(variable) => Expression::Variable(variable.into()),
+            ast::Expression::Variable(ast::VariableExpression { identifier }) => {
+                Expression::Variable(identifier.into())
+            }
 
             ast::Expression::Abstraction(abstraction) => {
                 Expression::Abstraction(abstraction.into())
@@ -209,9 +211,9 @@ mod test {
 
     #[test]
     fn translate_abstraction() {
-        let a = Expression::from(&ast::Expression::Abstraction(
-            ast::AbstractionExpression::new(&["x", "x"], "x"),
-        ));
+        let result =
+            ast::Expression::from(ast::AbstractionExpression::new(&["x", "x"], "x")).into();
+
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
             Expression::Abstraction(Abstraction::new(
@@ -219,7 +221,7 @@ mod test {
                 Expression::Variable(Variable::new(Some(0), "x")),
             )),
         ));
-        assert_eq!(expected, a);
+        assert_eq!(expected, result);
 
         let b = Expression::from(&ast::Expression::Abstraction(
             ast::AbstractionExpression::new(
