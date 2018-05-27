@@ -211,8 +211,10 @@ mod test {
 
     #[test]
     fn translate_abstraction() {
-        let result =
-            ast::Expression::from(ast::AbstractionExpression::new(&["x", "x"], "x")).into();
+        let result = Expression::from(&ast::Expression::from(ast::AbstractionExpression::new(
+            vec![ast::Identifier::new("x"), ast::Identifier::new("x")],
+            ast::VariableExpression::new(ast::Identifier::new("x")),
+        )));
 
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
@@ -223,15 +225,16 @@ mod test {
         ));
         assert_eq!(expected, result);
 
-        let b = Expression::from(&ast::Expression::Abstraction(
-            ast::AbstractionExpression::new(
-                &["x"],
-                ast::ApplicationExpression::new(&[
-                    ast::Expression::Abstraction(ast::AbstractionExpression::new(&["x"], "x")),
-                    ast::Expression::Identifier("x".into()),
-                ]),
-            ),
-        ));
+        let b = Expression::from(&ast::Expression::from(ast::AbstractionExpression::new(
+            vec![ast::Identifier::new("x")],
+            ast::ApplicationExpression::new(vec![
+                ast::Expression::from(ast::AbstractionExpression::new(
+                    vec![ast::Identifier::new("x")],
+                    ast::VariableExpression::new(ast::Identifier::new("x")),
+                )),
+                ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("x"))),
+            ]),
+        )));
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
             Expression::Application(Application::new(
@@ -247,9 +250,13 @@ mod test {
 
     #[test]
     fn translate_application() {
-        let a = Expression::from(&ast::Expression::Application(
-            ast::ApplicationExpression::new(&["a", "b", "c"]),
-        ));
+        let a = Expression::from(&ast::Expression::from(ast::ApplicationExpression::new(
+            vec![
+                ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("a"))),
+                ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("b"))),
+                ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("c"))),
+            ],
+        )));
         let expected = Expression::Application(Application::new(
             Expression::Application(Application::new(
                 Expression::Variable(Variable::new(None, "a")),
