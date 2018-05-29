@@ -21,13 +21,15 @@ addons:
       - binutils-dev
       - libiberty-dev
 
-after_success: |
+before_install:
+  echo "Building kcov..." &&
   pushd $HOME/kcov &&
   if [ -d .git ]; then git pull; else git clone --depth 1 https://github.com/SimonKagstrom/kcov.git .; fi &&
-  cmake . && make &&
-  popd &&
+  cmake . && make && popd
+
+after_success: |
+  echo "Uploading coverage..." &&
   for file in target/debug/clumsy-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; $HOME/kcov/src/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-  bash <(curl -s https://codecov.io/bash) &&
-  echo "Uploaded code coverage"
+  bash <(curl -s https://codecov.io/bash)
 
 # vim: set ts=2 sw=2 et:
