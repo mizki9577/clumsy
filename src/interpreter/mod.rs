@@ -18,61 +18,18 @@ pub enum Expression {
 }
 
 impl Expression {
-    fn assign_indices(&mut self) {
-        fn assign_indices_impl<'a>(value: &'a mut Expression, table: &mut HashMap<&'a str, usize>) {
-            match value {
-                Expression::Variable(Variable { name, index }) => {
-                    *index = table.get(name.as_str()).cloned();
-                }
-
-                Expression::Abstraction(Abstraction { name, expression }) => {
-                    let outer = table.get(name.as_str()).cloned();
-                    table.iter_mut().for_each(|(_, i)| *i += 1);
-                    table.insert(name, 0);
-
-                    assign_indices_impl(expression, table);
-
-                    table.remove(name.as_str());
-                    table.iter_mut().for_each(|(_, i)| *i -= 1);
-                    if let Some(i) = outer {
-                        table.insert(name, i);
-                    }
-                }
-
-                Expression::Application(Application { callee, argument }) => {
-                    assign_indices_impl(callee, table);
-                    assign_indices_impl(argument, table);
-                }
-            }
+    pub fn assign_indices<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
+        match self {
+            Expression::Variable(variable) => variable.assign_indices(table),
+            Expression::Abstraction(abstraction) => abstraction.assign_indices(table),
+            Expression::Application(application) => application.assign_indices(table),
         }
-
-        assign_indices_impl(self, &mut HashMap::new())
     }
 
     pub fn evaluate(self) -> Self {
         fn evaluate1(value: Expression) -> Result<Expression, Expression> {
             match value {
-                Expression::Application(Application {
-                    callee: box Expression::Abstraction(Abstraction { expression, .. }),
-                    box argument,
-                }) => Ok(expression
-                    .substituted(0, argument.shifted(1, 0))
-                    .shifted(-1, 0)),
-
-                Expression::Application(Application {
-                    callee: box callee,
-                    box argument,
-                }) => match evaluate1(callee) {
-                    Ok(callee) => Ok(Expression::Application(Application {
-                        callee: box callee,
-                        argument: box argument,
-                    })),
-                    Err(callee) => Err(Expression::Application(Application {
-                        callee: box callee,
-                        argument: box argument,
-                    })),
-                },
-
+                Expression::Application(application) => application.evaluate1(),
                 _ => Err(value),
             }
         }
@@ -85,59 +42,24 @@ impl Expression {
 
     fn shifted(self, d: isize, c: usize) -> Self {
         match self {
-            Expression::Variable(Variable {
-                index: Some(index),
-                ref name,
-            }) if index >= c =>
-            {
-                Expression::Variable(Variable {
-                    index: Some((index as isize + d) as usize),
-                    name: name.to_owned(),
-                })
+            Expression::Variable(variable) => Expression::Variable(variable.shifted(d, c)),
+            Expression::Abstraction(abstraction) => {
+                Expression::Abstraction(abstraction.shifted(d, c))
             }
-
-            Expression::Variable(_) => self,
-
-            Expression::Abstraction(Abstraction { name, expression }) => {
-                Expression::Abstraction(Abstraction {
-                    name,
-                    expression: box expression.shifted(d, c + 1),
-                })
-            }
-
-            Expression::Application(Application { callee, argument }) => {
-                Expression::Application(Application {
-                    callee: box callee.shifted(d, c),
-                    argument: box argument.shifted(d, c),
-                })
+            Expression::Application(application) => {
+                Expression::Application(application.shifted(d, c))
             }
         }
     }
 
     fn substituted(self, j: usize, term: Expression) -> Self {
         match self {
-            Expression::Variable(Variable {
-                index: Some(index), ..
-            }) if index == j =>
-            {
-                term
+            Expression::Variable(variable) => variable.substituted(j, term),
+            Expression::Abstraction(abstraction) => {
+                Expression::Abstraction(abstraction.substituted(j, term))
             }
-
-            Expression::Variable(_) => self,
-
-            Expression::Abstraction(Abstraction { name, expression }) => {
-                Expression::Abstraction(Abstraction {
-                    name,
-                    expression: box expression.substituted(j + 1, term.shifted(1, 0)),
-                })
-            }
-
-            Expression::Application(Application { callee, argument }) => {
-                let cloned_term = term.clone();
-                Expression::Application(Application {
-                    callee: box callee.substituted(j, term),
-                    argument: box argument.substituted(j, cloned_term),
-                })
+            Expression::Application(application) => {
+                Expression::Application(application.substituted(j, term))
             }
         }
     }
@@ -157,7 +79,7 @@ impl<'a> From<&'a ast::Expression> for Expression {
             ast::Expression::Application(application) => application.into(),
         };
 
-        result.assign_indices();
+        result.assign_indices(&mut HashMap::new());
         result
     }
 }
@@ -175,15 +97,12 @@ impl<'a> From<&'a ast::Program> for Expression {
                 ast::Statement::Let(ast::LetStatement {
                     variable: ast::Identifier(variable),
                     expression,
-                }) => Expression::Application(Application {
-                    callee: box Expression::Abstraction(Abstraction {
-                        name: variable.to_owned(),
-                        expression: box result,
-                    }),
-                    argument: box expression.into(),
-                }),
+                }) => Expression::Application(Application::new(
+                    Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
+                    expression,
+                )),
             });
-            result.assign_indices(); // FIXME: We are currently calling this twice. DAS IST GUT NICHT.
+            result.assign_indices(&mut HashMap::new()); // FIXME: We are currently calling this twice. DAS IST GUT NICHT.
             result
         } else {
             unimplemented!()
@@ -194,13 +113,9 @@ impl<'a> From<&'a ast::Program> for Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Expression::Abstraction(Abstraction { name, expression }) => {
-                write!(f, r"(\{}. {})", name, expression)
-            }
-            Expression::Application(Application { callee, argument }) => {
-                write!(f, r"({} {})", callee, argument)
-            }
-            Expression::Variable(Variable { name, .. }) => write!(f, r"{}", name),
+            Expression::Variable(variable) => variable.fmt(f),
+            Expression::Abstraction(abstraction) => abstraction.fmt(f),
+            Expression::Application(application) => application.fmt(f),
         }
     }
 }
