@@ -1,11 +1,6 @@
 body {
-  margin: 0;
-}
-
-main {
-  max-width: 8in;
-  max-height: 4.5in;
-  margin: 0.5in auto;
+  margin: 0 auto;
+  width: 800px;
 }
 
 /* vim: set ts=2 sw=2 et: */
