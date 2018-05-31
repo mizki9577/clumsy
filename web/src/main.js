@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import ClumsyWeb from './ClumsyWeb.js'
+import App from './App.js'
 
-ReactDOM.render(<ClumsyWeb />, document.querySelector('main'))
+ReactDOM.render(<App />, document.querySelector('main'))
 
 // vim: set ts=2 sw=2 et:
