@@ -1,6 +1,10 @@
 import React from 'react'
-import { CssBaseline, Grid, Paper } from '@material-ui/core'
+
+import CssBaseline from '@material-ui/core/CssBaseline'
+import Grid from '@material-ui/core/Grid'
+import Paper from '@material-ui/core/Paper'
 import { withStyles } from '@material-ui/core/styles'
+
 import TitleBar from './TitleBar.js'
 import MenuBar from './MenuBar.js'
 import Editor from './Editor.js'
