@@ -7,12 +7,12 @@
   "license": "CC0-1.0",
   "private": true,
   "scripts": {
-    "start": "cargo watch -w ./src/*.rs -s 'yarn build-rust && yarn build-wasm' & webpack-dev-server",
+    "start": "cargo watch -w ./src/*.rs -s 'yarn build-rust && yarn build-wasm' & webpack-dev-server --mode development",
     "build": "yarn build-rust && yarn build-wasm && yarn build-js",
     "deploy": "yarn clean && yarn build && yarn gh-pages",
-    "build-rust": "cargo build --target wasm32-unknown-unknown",
-    "build-wasm": "wasm-bindgen --out-dir ./src/ ./target/wasm32-unknown-unknown/debug/clumsy_web.wasm",
-    "build-js": "webpack",
+    "build-rust": "cargo build --release --target wasm32-unknown-unknown",
+    "build-wasm": "wasm-bindgen --out-dir ./src/ ./target/wasm32-unknown-unknown/release/clumsy_web.wasm",
+    "build-js": "webpack --mode production",
     "gh-pages": "gh-pages -d ./dist/",
     "clean": "cargo clean && rm -f dist/*.{js,wasm,map} src/clumsy_web{_bg.wasm,.d.ts,.js}"
   },
