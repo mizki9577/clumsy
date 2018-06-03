@@ -96,7 +96,7 @@ function evaluate(arg0) {
     var mem = getUint32Memory();
     var ptr = mem[retptr / 4];
     var len = mem[retptr / 4 + 1];
-    var realRet = getStringFromWasm(ptr, len);
+    var realRet = getStringFromWasm(ptr, len).slice();
 
     wasm.__wbindgen_free(ptr, len * 1);
 
@@ -244,13 +244,13 @@ function __wbindgen_throw(ptr, len) {
 
 "use strict";
 // Instantiate WebAssembly module
-var instance = __webpack_require__.w[module.i];
+var wasmExports = __webpack_require__.w[module.i];
 // export exports from WebAssembly module
-module.exports = instance.exports;
+for(var name in wasmExports) if(name != "__webpack_init__") exports[name] = wasmExports[name];
 // exec imports from WebAssembly module (for esm order)
 __webpack_require__(/*! ./clumsy_web */ "./src/clumsy_web.js");
 // exec wasm module
-instance.exports.__webpack_init__()
+wasmExports["__webpack_init__"]()
 
 /***/ })
 
