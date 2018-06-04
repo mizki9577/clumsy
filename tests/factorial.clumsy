@@ -1,0 +1,14 @@
+let 0 = \f x. x;
+let 1 = \f x. f x;
+let succ = \n f x. f (n f x);
+let plus = \m n. m succ n;
+let mul = \m n. m (plus n) 0;
+let pred = \n f x. n (\g h. h (g f)) (\u. x) (\u. u);
+let true = \x y. x;
+let false = \x y. y;
+let is_zero = \n. n (\x. false) true;
+let factorial = \f n. (is_zero n) 1 mul n (f (pred n)); 
+let Y = \f. (\x. f (x x)) (\x. f (x x));
+
+let 6 = \f x. f (f (f (f (f (f x)))));
+Y factorial 6;
