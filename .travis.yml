@@ -29,7 +29,7 @@ before_install:
 
 after_success: |
   echo "Uploading coverage..." &&
-  for file in target/debug/clumsy-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; $HOME/kcov/src/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+  for file in target/debug/clumsy-*[^\.d] target/debug/integration_test-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; $HOME/kcov/src/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
   bash <(curl -s https://codecov.io/bash)
 
 # vim: set ts=2 sw=2 et:
