@@ -28,28 +28,22 @@ impl Application {
         argument.assign_indices(table);
     }
 
-    pub fn evaluate1(self) -> Result<Expression, Expression> {
+    pub fn evaluate1(self) -> Expression {
         match self {
             Application {
                 callee: box Expression::Abstraction(callee),
                 box argument,
-            } => Ok(callee.applied(argument)),
+            } => callee.applied(argument),
 
             Application {
                 callee: box Expression::Application(callee),
-                box argument,
-            } => match callee.evaluate1() {
-                Ok(callee) => Ok(Expression::Application(Application {
-                    callee: box callee,
-                    argument: box argument,
-                })),
-                Err(callee) => Err(Expression::Application(Application {
-                    callee: box callee,
-                    argument: box argument,
-                })),
-            },
+                argument,
+            } => Expression::Application(Application {
+                callee: box callee.evaluate1(),
+                argument,
+            }),
 
-            _ => Err(Expression::Application(self)),
+            _ => Expression::Application(self),
         }
     }
 
