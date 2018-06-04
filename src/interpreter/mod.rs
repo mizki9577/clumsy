@@ -27,17 +27,11 @@ impl Expression {
     }
 
     pub fn evaluate(self) -> Self {
-        fn evaluate1(value: Expression) -> Result<Expression, Expression> {
-            match value {
-                Expression::Application(application) => application.evaluate1(),
-                _ => Err(value),
-            }
+        let mut current = self;
+        while let Expression::Application(application) = current {
+            current = application.evaluate1();
         }
-
-        match evaluate1(self) {
-            Ok(result) => result.evaluate(),
-            Err(result) => result,
-        }
+        current
     }
 
     fn shifted(self, d: isize, c: usize) -> Self {
