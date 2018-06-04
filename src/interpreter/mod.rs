@@ -34,6 +34,30 @@ impl Expression {
         current
     }
 
+    pub fn evaluate_eager(self) -> Self {
+        let mut current = self;
+        while current.has_eager_redex() {
+            current = current.evaluate_eager1();
+        }
+        current
+    }
+
+    fn evaluate_eager1(self) -> Self {
+        match self {
+            Expression::Variable(_) => self,
+            Expression::Abstraction(_) => self,
+            Expression::Application(application) => application.evaluate_eager1(),
+        }
+    }
+
+    pub fn has_eager_redex(&self) -> bool {
+        match self {
+            Expression::Variable(_) => false,
+            Expression::Abstraction(_) => false,
+            Expression::Application(application) => application.has_eager_redex(),
+        }
+    }
+
     fn shifted(self, d: isize, c: usize) -> Self {
         match self {
             Expression::Variable(variable) => Expression::Variable(variable.shifted(d, c)),
