@@ -163,4 +163,16 @@ mod test {
         ]);
         assert_eq!(expected, result);
     }
+
+    #[test]
+    fn test_parse_let() {
+        let result = parse_let(&mut Lexer::new("let x = y").peekable());
+        let expected = Ok(ast::LetStatement::new(
+            ast::Identifier::new("x"),
+            ast::ApplicationExpression::new(vec![ast::Expression::from(
+                ast::VariableExpression::new(ast::Identifier::new("y")),
+            )]),
+        ));
+        assert_eq!(expected, result);
+    }
 }
