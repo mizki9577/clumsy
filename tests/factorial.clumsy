@@ -7,8 +7,8 @@ let pred = \n f x. n (\g h. h (g f)) (\u. x) (\u. u);
 let true = \x y. x;
 let false = \x y. y;
 let is_zero = \n. n (\x. false) true;
-let factorial = \f n. (is_zero n) 1 mul n (f (pred n)); 
-let Y = \f. (\x. f (x x)) (\x. f (x x));
+let Z = \f. (\x. f (\y. x x y)) (\x. f (\y. x x y));
+let factorial = Z (\f n. (is_zero n) 1 (mul n (f (pred n)))); 
 
-let 6 = \f x. f (f (f (f (f (f x)))));
-Y factorial 6;
+let 3 = \f x. f (f (f x));
+factorial 3;

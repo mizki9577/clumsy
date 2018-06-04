@@ -47,6 +47,40 @@ impl Application {
         }
     }
 
+    pub fn evaluate_eager1(self) -> Expression {
+        if self.callee.has_eager_redex() {
+            Expression::Application(Application {
+                callee: box self.callee.evaluate_eager1(),
+                ..self
+            })
+        } else if self.argument.has_eager_redex() {
+            Expression::Application(Application {
+                argument: box self.argument.evaluate_eager1(),
+                ..self
+            })
+        } else if let Application {
+            callee: box Expression::Abstraction(callee),
+            box argument,
+        } = self
+        {
+            callee.applied(argument)
+        } else {
+            panic!(":(")
+        }
+    }
+
+    pub fn has_eager_redex(&self) -> bool {
+        if self.callee.has_eager_redex() || self.argument.has_eager_redex() {
+            return true;
+        }
+
+        match self.callee {
+            box Expression::Variable(_) => false,
+            box Expression::Abstraction(_) => true,
+            box Expression::Application(_) => self.callee.has_eager_redex(),
+        }
+    }
+
     pub fn shifted(self, d: isize, c: usize) -> Self {
         let Application { callee, argument } = self;
         Application {
