@@ -54,3 +54,29 @@ impl Display for TokenType {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_token_display() {
+        for (token, result) in &[
+            (Token::new(TokenType::LeftBracket, 0, 0), "'('"),
+            (Token::new(TokenType::RightBracket, 0, 0), "')'"),
+            (Token::new(TokenType::Lambda, 0, 0), r"'\'"),
+            (Token::new(TokenType::Dot, 0, 0), "'.'"),
+            (Token::new(TokenType::Equal, 0, 0), "'='"),
+            (Token::new(TokenType::Semicolon, 0, 0), "';'"),
+            (Token::new(TokenType::Let, 0, 0), "'let'"),
+            (
+                Token::new(TokenType::Identifier("x".to_owned()), 0, 0),
+                r#""x""#,
+            ),
+            (Token::new(TokenType::EOF, 0, 0), "EOF"),
+            (Token::new(TokenType::InvalidCharacter('?'), 0, 0), "'?'"),
+        ] {
+            assert_eq!(format!("{}", token), format!("{} (0:0)", result));
+        }
+    }
+}

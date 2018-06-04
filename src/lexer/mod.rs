@@ -86,8 +86,9 @@ mod test {
                 Token::new(TokenType::Identifier("barBaz_2000".to_owned()), 1, 10),
                 Token::new(TokenType::Dot, 1, 11),
                 Token::new(TokenType::RightBracket, 1, 12),
+                Token::new(TokenType::InvalidCharacter('^'), 1, 13),
             ],
-            Lexer::new("(\\foo\nbarBaz_2000.)")
+            Lexer::new("(\\foo\nbarBaz_2000.)^")
                 .take_while(|token| token.token_type != TokenType::EOF)
                 .collect::<Vec<_>>(),
         );
