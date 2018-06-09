@@ -11,12 +11,11 @@ Try it now: https://mizkichan.github.io/clumsy/
 - Based on lambda calculus
 - Lazy evaulation
 
-## "No"s
-- No type system (so far)
-- No compiler (for now)
-- No side effects (unwillingly)
-- No library (I want it)
-- No documents (it should be written)
-- No knowledge of the author (sorry!)
+## TODO
+- Some standard library
+- Calling C functions (FFI)
+- Documents
+- Type system
+- Compiler
 
 <!-- vim: set ts=4 sw=4 et: -->
