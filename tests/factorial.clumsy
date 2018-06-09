@@ -1,14 +1,20 @@
-let 0 = \f x. x;
 let 1 = \f x. f x;
-let succ = \n f x. f (n f x);
-let plus = \m n. m succ n;
-let mul = \m n. m (plus n) 0;
+let 4 = \f x. f (f (f (f x)));
+let 24 = \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x)))))))))))))))))))))));
+
+let mul = \m n f. m (n f);
 let pred = \n f x. n (\g h. h (g f)) (\u. x) (\u. u);
+let sub = \m n. n pred m;
+
 let true = \x y. x;
 let false = \x y. y;
+let and = \p q. p q p;
 let is_zero = \n. n (\x. false) true;
-let Z = \f. (\x. f (\y. x x y)) (\x. f (\y. x x y));
-let factorial = Z (\f n. (is_zero n) 1 (mul n (f (pred n)))); 
+let is_equal = \m n. and (is_zero (sub m n)) (is_zero (sub n m));
 
-let 3 = \f x. f (f (f x));
-factorial 3;
+let Z = \f. (\x. f (\y. x x y)) (\x. f (\y. x x y));
+
+let factorial_impl = \f n. (is_zero n) 1 (mul n (f (pred n)));
+let factorial = Z factorial_impl;
+
+is_equal (factorial 4) 24;
