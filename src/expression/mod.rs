@@ -64,7 +64,7 @@ impl Expression {
                 Expression::Abstraction(Abstraction::from_ast(abstraction, table))
             }
 
-            ast::Expression::Application(application) => Application::from_ast(application, table), // FIXME: looks weird
+            ast::Expression::Application(application) => Application::from_ast(application, table), // FIXME: looking weird. the associated function `Application::from_ast` returns `Expression`.
         }
     }
 
@@ -82,13 +82,28 @@ impl Expression {
                 Expression::from_ast(result, table),
                 |result, statement| match statement {
                     ast::Statement::Expression(..) => unimplemented!(),
+
                     ast::Statement::Let(ast::LetStatement {
                         variable: ast::Identifier(variable),
                         expression,
-                    }) => Expression::Application(Application::new(
-                        Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
-                        Expression::from_ast(expression, table),
-                    )),
+                    }) => {
+                        let outer = table.get(variable.as_str()).cloned();
+                        table.iter_mut().for_each(|(_, i)| *i += 1);
+                        table.insert(variable.as_str(), 0);
+
+                        let result = Expression::Application(Application::new(
+                            Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
+                            Expression::from_ast(expression, table),
+                        ));
+
+                        table.remove(variable.as_str());
+                        table.iter_mut().for_each(|(_, i)| *i -= 1);
+                        if let Some(i) = outer {
+                            table.insert(variable.as_str(), i);
+                        }
+
+                        result
+                    }
                 },
             )
         } else {

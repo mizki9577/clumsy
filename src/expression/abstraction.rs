@@ -16,6 +16,7 @@ impl Abstraction {
         T: Into<String>,
         U: Into<Expression>,
     {
+        // TODO I think we have to assign a De Bruijn's Index here.
         Abstraction {
             name: name.into(),
             expression: box expression.into(),
@@ -40,19 +41,7 @@ impl Abstraction {
                 Expression::from_ast(&value.expression, table),
             ),
             |body, ast::Identifier(parameter)| {
-                let outer = table.get(parameter.as_str()).cloned();
-                table.iter_mut().for_each(|(_, i)| *i += 1);
-                table.insert(parameter.as_str(), 0);
-
-                let result = Abstraction::new(parameter.as_str(), Expression::Abstraction(body));
-
-                table.remove(parameter.as_str());
-                table.iter_mut().for_each(|(_, i)| *i -= 1);
-                if let Some(i) = outer {
-                    table.insert(parameter.as_str(), i);
-                }
-
-                result
+                Abstraction::new(parameter.as_str(), Expression::Abstraction(body))
             },
         );
 
