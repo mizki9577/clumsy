@@ -23,9 +23,8 @@ impl Application {
     }
 
     pub fn assign_indices<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
-        let Application { callee, argument } = self;
-        callee.assign_indices(table);
-        argument.assign_indices(table);
+        self.callee.assign_indices(table);
+        self.argument.assign_indices(table);
     }
 
     pub fn evaluate1(self) -> Expression {
@@ -37,53 +36,35 @@ impl Application {
 
             Application {
                 callee: box Expression::Application(callee),
-                argument,
-            } => Expression::Application(Application {
-                callee: box callee.evaluate1(),
-                argument,
-            }),
+                box argument,
+            } => Expression::Application(Application::new(callee.evaluate1(), argument)),
 
             _ => Expression::Application(self),
         }
     }
 
     pub fn shifted(self, d: isize, c: usize) -> Self {
-        let Application { callee, argument } = self;
-        Application {
-            callee: box callee.shifted(d, c),
-            argument: box argument.shifted(d, c),
-        }
+        Application::new(self.callee.shifted(d, c), self.argument.shifted(d, c))
     }
 
     pub fn substituted(self, j: usize, term: Expression) -> Self {
-        let Application { callee, argument } = self;
         let cloned_term = term.clone();
-        Application {
-            callee: box callee.substituted(j, term),
-            argument: box argument.substituted(j, cloned_term),
-        }
+        Application::new(
+            self.callee.substituted(j, term),
+            self.argument.substituted(j, cloned_term),
+        )
     }
 }
 
 impl<'a> From<&'a ast::ApplicationExpression> for Expression {
     fn from(value: &ast::ApplicationExpression) -> Expression {
-        let ast::ApplicationExpression { expressions } = value;
-
-        let mut iter = expressions.iter();
+        let mut iter = value.expressions.iter();
         let callee = iter.next().unwrap();
 
         if let Some(argument) = iter.next() {
             iter.fold(
-                Expression::Application(Application {
-                    callee: box callee.into(),
-                    argument: box argument.into(),
-                }),
-                |callee, argument| {
-                    Expression::Application(Application {
-                        callee: box callee,
-                        argument: box argument.into(),
-                    })
-                },
+                Expression::Application(Application::new(callee, argument)),
+                |callee, argument| Expression::Application(Application::new(callee, argument)),
             )
         } else {
             callee.into()
