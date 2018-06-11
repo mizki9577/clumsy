@@ -3,7 +3,7 @@
 extern crate clumsy;
 extern crate wasm_bindgen;
 
-use clumsy::interpreter::Expression;
+use clumsy::expression::Expression;
 use clumsy::lexer::Lexer;
 use clumsy::parser;
 use wasm_bindgen::prelude::*;
