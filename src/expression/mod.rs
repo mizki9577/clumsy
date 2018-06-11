@@ -178,41 +178,41 @@ mod test {
 
     #[test]
     fn test_shift() {
-        let expected = Expression::Variable(Variable::new(Some(1), "x"));
-        let result = Expression::Variable(Variable::new(Some(0), "x")).shifted(1, 0);
+        let expected = Expression::Variable(Variable::new(1, "x"));
+        let result = Expression::Variable(Variable::new(0, "x")).shifted(1, 0);
         assert_eq!(expected, result);
 
-        let expected = Expression::Variable(Variable::new(Some(0), "x"));
-        let result = Expression::Variable(Variable::new(Some(0), "x")).shifted(1, 1);
+        let expected = Expression::Variable(Variable::new(0, "x"));
+        let result = Expression::Variable(Variable::new(0, "x")).shifted(1, 1);
         assert_eq!(expected, result);
 
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
-            Expression::Variable(Variable::new(Some(2), "y")),
+            Expression::Variable(Variable::new(2, "y")),
         ));
         let result = Expression::Abstraction(Abstraction::new(
             "x",
-            Expression::Variable(Variable::new(Some(1), "y")),
+            Expression::Variable(Variable::new(1, "y")),
         )).shifted(1, 0);
         assert_eq!(expected, result);
 
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
-            Expression::Variable(Variable::new(Some(0), "x")),
+            Expression::Variable(Variable::new(0, "x")),
         ));
         let result = Expression::Abstraction(Abstraction::new(
             "x",
-            Expression::Variable(Variable::new(Some(0), "x")),
+            Expression::Variable(Variable::new(0, "x")),
         )).shifted(1, 0);
         assert_eq!(expected, result);
 
         let expected = Expression::Application(Application::new(
-            Expression::Variable(Variable::new(Some(1), "x")),
-            Expression::Variable(Variable::new(Some(2), "y")),
+            Expression::Variable(Variable::new(1, "x")),
+            Expression::Variable(Variable::new(2, "y")),
         ));
         let result = Expression::Application(Application::new(
-            Expression::Variable(Variable::new(Some(0), "x")),
-            Expression::Variable(Variable::new(Some(1), "y")),
+            Expression::Variable(Variable::new(0, "x")),
+            Expression::Variable(Variable::new(1, "y")),
         )).shifted(1, 0);
         assert_eq!(expected, result);
     }
@@ -220,12 +220,12 @@ mod test {
     #[test]
     fn test_substitute() {
         let expected = Expression::Variable(Variable::new(None, "a"));
-        let result = Expression::Variable(Variable::new(Some(0), "x"))
+        let result = Expression::Variable(Variable::new(0, "x"))
             .substituted(0, Expression::Variable(Variable::new(None, "a")));
         assert_eq!(expected, result);
 
-        let expected = Expression::Variable(Variable::new(Some(1), "x"));
-        let result = Expression::Variable(Variable::new(Some(1), "x"))
+        let expected = Expression::Variable(Variable::new(1, "x"));
+        let result = Expression::Variable(Variable::new(1, "x"))
             .substituted(0, Expression::Variable(Variable::new(None, "a")));
         assert_eq!(expected, result);
 
@@ -235,27 +235,27 @@ mod test {
         ));
         let result = Expression::Abstraction(Abstraction::new(
             "x",
-            Expression::Variable(Variable::new(Some(1), "y")),
+            Expression::Variable(Variable::new(1, "y")),
         )).substituted(0, Expression::Variable(Variable::new(None, "a")));
         assert_eq!(expected, result);
 
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
-            Expression::Variable(Variable::new(Some(0), "x")),
+            Expression::Variable(Variable::new(0, "x")),
         ));
         let result = Expression::Abstraction(Abstraction::new(
             "x",
-            Expression::Variable(Variable::new(Some(0), "x")),
+            Expression::Variable(Variable::new(0, "x")),
         )).substituted(0, Expression::Variable(Variable::new(None, "a")));
         assert_eq!(expected, result);
 
         let expected = Expression::Application(Application::new(
-            Expression::Variable(Variable::new(Some(0), "x")),
+            Expression::Variable(Variable::new(0, "x")),
             Expression::Variable(Variable::new(None, "a")),
         ));
         let result = Expression::Application(Application::new(
-            Expression::Variable(Variable::new(Some(0), "x")),
-            Expression::Variable(Variable::new(Some(1), "y")),
+            Expression::Variable(Variable::new(0, "x")),
+            Expression::Variable(Variable::new(1, "y")),
         )).substituted(1, Expression::Variable(Variable::new(None, "a")));
         assert_eq!(expected, result);
     }
