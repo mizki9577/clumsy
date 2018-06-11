@@ -11,19 +11,19 @@ pub struct Variable {
 }
 
 impl Variable {
-    pub fn new<T>(index: Option<usize>, name: T) -> Variable
+    pub fn new<T, U>(index: T, name: U) -> Variable
     where
-        T: Into<String>,
+        T: Into<Option<usize>>,
+        U: Into<String>,
     {
         Variable {
             name: name.into(),
-            index,
+            index: index.into(),
         }
     }
 
     pub fn assign_indices<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
-        let Variable { name, index } = self;
-        *index = table.get(name.as_str()).cloned();
+        self.index = table.get(self.name.as_str()).cloned();
     }
 
     pub fn shifted(self, d: isize, c: usize) -> Self {
@@ -33,10 +33,7 @@ impl Variable {
                 ref name,
             } if index >= c =>
             {
-                Variable {
-                    index: Some((index as isize + d) as usize),
-                    name: name.to_owned(),
-                }
+                Variable::new((index as isize + d) as usize, name.as_str())
             }
 
             _ => self,
@@ -60,10 +57,7 @@ impl Variable {
 impl<'a> From<&'a ast::Identifier> for Variable {
     fn from(value: &ast::Identifier) -> Variable {
         let ast::Identifier(identifier) = value;
-        Variable {
-            name: identifier.to_owned(),
-            index: None,
-        }
+        Variable::new(None, identifier.as_str())
     }
 }
 
