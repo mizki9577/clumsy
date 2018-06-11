@@ -22,6 +22,7 @@ impl Expression {
         let mut current = self;
         while let Expression::Application(application) = current {
             current = application.evaluate1();
+            println!("{}\n", current);
         }
         current
     }
@@ -173,6 +174,42 @@ mod test {
             Expression::Variable(Variable::new(None, "c")),
         ));
         assert_eq!(expected, a);
+    }
+
+    #[test]
+    fn translate_let_statement() {
+        let expected = Expression::Application(Application::new(
+            Expression::Abstraction(Abstraction::new(
+                "id",
+                Expression::Variable(Variable::new(0, "id")),
+            )),
+            Expression::Abstraction(Abstraction::new(
+                "x",
+                Expression::Variable(Variable::new(0, "x")),
+            )),
+        ));
+        let result = Expression::from_ast_program(
+            &ast::Program(vec![
+                ast::Statement::from(ast::LetStatement::new(
+                    ast::Identifier::new("id"),
+                    ast::Expression::from(ast::AbstractionExpression::new(
+                        vec![ast::Identifier::new("x")],
+                        ast::Expression::from(ast::ApplicationExpression::new(vec![
+                            ast::Expression::from(ast::VariableExpression::new(
+                                ast::Identifier::new("x"),
+                            )),
+                        ])),
+                    )),
+                )),
+                ast::Statement::from(ast::ExpressionStatement::new(ast::Expression::from(
+                    ast::VariableExpression::new(ast::Identifier::new("id")),
+                ))),
+            ]),
+            &mut HashMap::new(),
+        );
+        println!("expected: {}", expected);
+        println!("result  : {}", result);
+        assert_eq!(expected, result);
     }
 
     #[test]
