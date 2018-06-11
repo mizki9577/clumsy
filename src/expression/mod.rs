@@ -18,14 +18,6 @@ pub enum Expression {
 }
 
 impl Expression {
-    pub fn assign_indices<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
-        match self {
-            Expression::Variable(variable) => variable.assign_indices(table),
-            Expression::Abstraction(abstraction) => abstraction.assign_indices(table),
-            Expression::Application(application) => application.assign_indices(table),
-        }
-    }
-
     pub fn evaluate(self) -> Self {
         let mut current = self;
         while let Expression::Application(application) = current {
@@ -57,47 +49,47 @@ impl Expression {
             }
         }
     }
-}
 
-impl<'a> From<&'a ast::Expression> for Expression {
-    fn from(value: &ast::Expression) -> Self {
-        let mut result = match value {
-            ast::Expression::Variable(ast::VariableExpression { identifier }) => {
-                Expression::Variable(identifier.into())
+    pub fn from_ast<'a>(
+        value: &'a ast::Expression,
+        table: &mut HashMap<&'a str, usize>,
+    ) -> Expression {
+        match value {
+            ast::Expression::Variable(variable) => {
+                Expression::Variable(Variable::from_ast(variable, table))
             }
 
             ast::Expression::Abstraction(abstraction) => {
-                Expression::Abstraction(abstraction.into())
+                Expression::Abstraction(Abstraction::from_ast(abstraction, table))
             }
 
-            ast::Expression::Application(application) => application.into(),
-        };
-
-        result.assign_indices(&mut HashMap::new());
-        result
+            ast::Expression::Application(application) => Application::from_ast(application, table), // FIXME: looks weird
+        }
     }
-}
 
-impl<'a> From<&'a ast::Program> for Expression {
-    fn from(value: &ast::Program) -> Self {
+    pub fn from_ast_program<'a>(
+        value: &'a ast::Program,
+        table: &mut HashMap<&'a str, usize>,
+    ) -> Expression {
         let ast::Program(statements) = value;
 
         let mut iter = statements.iter().rev();
         if let Some(ast::Statement::Expression(ast::ExpressionStatement { expression: result })) =
             iter.next()
         {
-            let mut result = iter.fold(result.into(), |result, statement| match statement {
-                ast::Statement::Expression(..) => unimplemented!(),
-                ast::Statement::Let(ast::LetStatement {
-                    variable: ast::Identifier(variable),
-                    expression,
-                }) => Expression::Application(Application::new(
-                    Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
-                    expression,
-                )),
-            });
-            result.assign_indices(&mut HashMap::new()); // FIXME: We are currently calling this twice. DAS IST GUT NICHT.
-            result
+            iter.fold(
+                Expression::from_ast(result, table),
+                |result, statement| match statement {
+                    ast::Statement::Expression(..) => unimplemented!(),
+                    ast::Statement::Let(ast::LetStatement {
+                        variable: ast::Identifier(variable),
+                        expression,
+                    }) => Expression::Application(Application::new(
+                        Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
+                        Expression::from_ast(expression, table),
+                    )),
+                },
+            )
         } else {
             unimplemented!()
         }
@@ -120,10 +112,13 @@ mod test {
 
     #[test]
     fn translate_abstraction() {
-        let result = Expression::from(&ast::Expression::from(ast::AbstractionExpression::new(
-            vec![ast::Identifier::new("x"), ast::Identifier::new("x")],
-            ast::VariableExpression::new(ast::Identifier::new("x")),
-        )));
+        let result = Expression::from_ast(
+            &ast::Expression::from(ast::AbstractionExpression::new(
+                vec![ast::Identifier::new("x"), ast::Identifier::new("x")],
+                ast::VariableExpression::new(ast::Identifier::new("x")),
+            )),
+            &mut HashMap::new(),
+        );
 
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
@@ -134,16 +129,19 @@ mod test {
         ));
         assert_eq!(expected, result);
 
-        let b = Expression::from(&ast::Expression::from(ast::AbstractionExpression::new(
-            vec![ast::Identifier::new("x")],
-            ast::ApplicationExpression::new(vec![
-                ast::Expression::from(ast::AbstractionExpression::new(
-                    vec![ast::Identifier::new("x")],
-                    ast::VariableExpression::new(ast::Identifier::new("x")),
-                )),
-                ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("x"))),
-            ]),
-        )));
+        let b = Expression::from_ast(
+            &ast::Expression::from(ast::AbstractionExpression::new(
+                vec![ast::Identifier::new("x")],
+                ast::ApplicationExpression::new(vec![
+                    ast::Expression::from(ast::AbstractionExpression::new(
+                        vec![ast::Identifier::new("x")],
+                        ast::VariableExpression::new(ast::Identifier::new("x")),
+                    )),
+                    ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("x"))),
+                ]),
+            )),
+            &mut HashMap::new(),
+        );
         let expected = Expression::Abstraction(Abstraction::new(
             "x",
             Expression::Application(Application::new(
@@ -159,13 +157,14 @@ mod test {
 
     #[test]
     fn translate_application() {
-        let a = Expression::from(&ast::Expression::from(ast::ApplicationExpression::new(
-            vec![
+        let a = Expression::from_ast(
+            &ast::Expression::from(ast::ApplicationExpression::new(vec![
                 ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("a"))),
                 ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("b"))),
                 ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("c"))),
-            ],
-        )));
+            ])),
+            &mut HashMap::new(),
+        );
         let expected = Expression::Application(Application::new(
             Expression::Application(Application::new(
                 Expression::Variable(Variable::new(None, "a")),

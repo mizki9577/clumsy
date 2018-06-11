@@ -22,8 +22,15 @@ impl Variable {
         }
     }
 
-    pub fn assign_indices<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
-        self.index = table.get(self.name.as_str()).cloned();
+    pub fn from_ast<'a>(
+        value: &ast::VariableExpression,
+        table: &mut HashMap<&'a str, usize>,
+    ) -> Variable {
+        let ast::VariableExpression {
+            identifier: ast::Identifier(name),
+        } = value;
+        let index = table.get(name.as_str()).cloned();
+        Variable::new(index, name.as_str())
     }
 
     pub fn shifted(self, d: isize, c: usize) -> Self {
@@ -51,13 +58,6 @@ impl Variable {
 
             _ => Expression::Variable(self),
         }
-    }
-}
-
-impl<'a> From<&'a ast::Identifier> for Variable {
-    fn from(value: &ast::Identifier) -> Variable {
-        let ast::Identifier(identifier) = value;
-        Variable::new(None, identifier.as_str())
     }
 }
 
