@@ -22,9 +22,29 @@ impl Application {
         }
     }
 
-    pub fn assign_indices<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
-        self.callee.assign_indices(table);
-        self.argument.assign_indices(table);
+    pub fn from_ast<'a>(
+        value: &'a ast::ApplicationExpression,
+        table: &mut HashMap<&'a str, usize>,
+    ) -> Expression {
+        let mut iter = value.expressions.iter();
+        let callee = iter.next().unwrap();
+
+        if let Some(argument) = iter.next() {
+            iter.fold(
+                Expression::Application(Application::new(
+                    Expression::from_ast(callee, table),
+                    Expression::from_ast(argument, table),
+                )),
+                |callee, argument| {
+                    Expression::Application(Application::new(
+                        callee,
+                        Expression::from_ast(argument, table),
+                    ))
+                },
+            )
+        } else {
+            Expression::from_ast(callee, table)
+        }
     }
 
     pub fn evaluate1(self) -> Expression {
@@ -53,22 +73,6 @@ impl Application {
             self.callee.substituted(j, term),
             self.argument.substituted(j, cloned_term),
         )
-    }
-}
-
-impl<'a> From<&'a ast::ApplicationExpression> for Expression {
-    fn from(value: &ast::ApplicationExpression) -> Expression {
-        let mut iter = value.expressions.iter();
-        let callee = iter.next().unwrap();
-
-        if let Some(argument) = iter.next() {
-            iter.fold(
-                Expression::Application(Application::new(callee, argument)),
-                |callee, argument| Expression::Application(Application::new(callee, argument)),
-            )
-        } else {
-            callee.into()
-        }
     }
 }
 
