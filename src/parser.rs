@@ -14,49 +14,43 @@ fn expect(tokens: &mut Lexer, expected: &TokenType) -> Result<()> {
 pub fn parse(tokens: &mut Lexer) -> Result<ast::Program> {
     let mut statements = Vec::new();
 
-    loop {
-        match tokens.peek().token_type {
-            TokenType::Lambda
-            | TokenType::LeftBracket
-            | TokenType::Let
-            | TokenType::Identifier(_) => statements.push(parse_statement(tokens)?),
-            _ => break,
-        }
+    while let TokenType::Lambda
+    | TokenType::LeftBracket
+    | TokenType::Let
+    | TokenType::Identifier(..) = tokens.peek().token_type
+    {
+        statements.push(parse_statement(tokens)?)
     }
 
     Ok(ast::Program(statements))
 }
 
 fn parse_statement(tokens: &mut Lexer) -> Result<ast::Statement> {
-    let result = match tokens.peek() {
-        token => match token.token_type {
-            TokenType::Lambda | TokenType::LeftBracket | TokenType::Identifier(_) => {
-                ast::Statement::from(ast::ExpressionStatement::new(parse_expression(tokens)?))
-            }
+    let result = match tokens.peek().token_type {
+        TokenType::Lambda | TokenType::LeftBracket | TokenType::Identifier(..) => {
+            ast::Statement::from(ast::ExpressionStatement::new(parse_expression(tokens)?))
+        }
 
-            TokenType::Let => ast::Statement::from(parse_let(tokens)?),
+        TokenType::Let => ast::Statement::from(parse_let(tokens)?),
 
-            ref found => {
-                return Err(format!(
-                    "Expected '\\', '(', 'let' or Variable, found {}",
-                    found
-                ))
-            }
-        },
+        ref found => {
+            return Err(format!(
+                "Expected '\\', '(', 'let' or Variable, found {}",
+                found
+            ))
+        }
     };
     expect(tokens, &TokenType::Semicolon)?;
     Ok(result)
 }
 
 pub fn parse_expression(tokens: &mut Lexer) -> Result<ast::Expression> {
-    match tokens.peek() {
-        token => match token.token_type {
-            TokenType::Lambda => Ok(ast::Expression::from(parse_abstraction(tokens)?)),
-            TokenType::LeftBracket | TokenType::Identifier(_) => {
-                Ok(ast::Expression::from(parse_application(tokens)?))
-            }
-            ref found => Err(format!("Expected '\\', '(' or Variable, found {}", found)),
-        },
+    match tokens.peek().token_type {
+        TokenType::Lambda => Ok(ast::Expression::from(parse_abstraction(tokens)?)),
+        TokenType::LeftBracket | TokenType::Identifier(..) => {
+            Ok(ast::Expression::from(parse_application(tokens)?))
+        }
+        ref found => Err(format!("Expected '\\', '(' or Variable, found {}", found)),
     }
 }
 
@@ -70,28 +64,29 @@ fn parse_abstraction(tokens: &mut Lexer) -> Result<ast::AbstractionExpression> {
 
 fn parse_parameters(tokens: &mut Lexer) -> Result<Vec<ast::Identifier>> {
     let mut parameters = Vec::new();
-    loop {
-        match tokens.peek().token_type {
-            TokenType::Identifier(_) => parameters.push(parse_identifier(tokens)?),
-            _ => return Ok(parameters),
-        }
+    while let TokenType::Identifier(..) = tokens.peek().token_type {
+        parameters.push(parse_identifier(tokens)?);
     }
+    Ok(parameters)
 }
 
 fn parse_application(tokens: &mut Lexer) -> Result<ast::ApplicationExpression> {
     let mut expressions = Vec::new();
     loop {
         expressions.push(match tokens.peek().token_type {
-            TokenType::Identifier(_) => {
+            TokenType::Identifier(..) => {
                 ast::Expression::from(ast::VariableExpression::new(parse_identifier(tokens)?))
             }
+
             TokenType::LeftBracket => {
                 expect(tokens, &TokenType::LeftBracket)?;
                 let expression = parse_expression(tokens)?;
                 expect(tokens, &TokenType::RightBracket)?;
                 expression
             }
+
             TokenType::Lambda => ast::Expression::from(parse_abstraction(tokens)?),
+
             _ => break,
         });
     }
@@ -99,11 +94,9 @@ fn parse_application(tokens: &mut Lexer) -> Result<ast::ApplicationExpression> {
 }
 
 fn parse_identifier(tokens: &mut Lexer) -> Result<ast::Identifier> {
-    match tokens.next() {
-        token => match token.token_type {
-            TokenType::Identifier(variable) => Ok(ast::Identifier::new(variable)),
-            found => Err(format!("Expected Variable, found {}", found)),
-        },
+    match tokens.next().token_type {
+        TokenType::Identifier(variable) => Ok(ast::Identifier::new(variable)),
+        found => Err(format!("Expected Variable, found {}", found)),
     }
 }
 
