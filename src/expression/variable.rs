@@ -26,7 +26,7 @@ impl Variable {
         self.index = table.get(self.name.as_str()).cloned();
     }
 
-    pub fn shifted(self, d: isize, c: usize) -> Self {
+    pub fn shifted(self, d: isize, c: usize) -> Variable {
         match self {
             Variable {
                 index: Some(index),

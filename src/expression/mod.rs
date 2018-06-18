@@ -26,7 +26,7 @@ impl Expression {
         }
     }
 
-    pub fn evaluate(self) -> Self {
+    pub fn evaluate(self) -> Expression {
         let mut current = self;
         while let Expression::Application(application) = current {
             current = application.evaluate1();
@@ -34,7 +34,7 @@ impl Expression {
         current
     }
 
-    fn shifted(self, d: isize, c: usize) -> Self {
+    fn shifted(self, d: isize, c: usize) -> Expression {
         match self {
             Expression::Variable(variable) => Expression::Variable(variable.shifted(d, c)),
             Expression::Abstraction(abstraction) => {
@@ -46,7 +46,7 @@ impl Expression {
         }
     }
 
-    fn substituted(self, j: usize, term: Expression) -> Self {
+    fn substituted(self, j: usize, term: Expression) -> Expression {
         match self {
             Expression::Variable(variable) => variable.substituted(j, term),
             Expression::Abstraction(abstraction) => {
@@ -60,7 +60,7 @@ impl Expression {
 }
 
 impl<'a> From<&'a ast::Expression> for Expression {
-    fn from(value: &ast::Expression) -> Self {
+    fn from(value: &ast::Expression) -> Expression {
         let mut result = match value {
             ast::Expression::Variable(ast::VariableExpression { identifier }) => {
                 Expression::Variable(identifier.into())
@@ -79,7 +79,7 @@ impl<'a> From<&'a ast::Expression> for Expression {
 }
 
 impl<'a> From<&'a ast::Program> for Expression {
-    fn from(value: &ast::Program) -> Self {
+    fn from(value: &ast::Program) -> Expression {
         let ast::Program(statements) = value;
 
         let mut iter = statements.iter().rev();

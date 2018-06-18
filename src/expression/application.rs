@@ -43,11 +43,11 @@ impl Application {
         }
     }
 
-    pub fn shifted(self, d: isize, c: usize) -> Self {
+    pub fn shifted(self, d: isize, c: usize) -> Application {
         Application::new(self.callee.shifted(d, c), self.argument.shifted(d, c))
     }
 
-    pub fn substituted(self, j: usize, term: Expression) -> Self {
+    pub fn substituted(self, j: usize, term: Expression) -> Application {
         let cloned_term = term.clone();
         Application::new(
             self.callee.substituted(j, term),

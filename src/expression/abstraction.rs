@@ -43,11 +43,11 @@ impl Abstraction {
             .shifted(-1, 0)
     }
 
-    pub fn shifted(self, d: isize, c: usize) -> Self {
+    pub fn shifted(self, d: isize, c: usize) -> Abstraction {
         Abstraction::new(self.name, self.expression.shifted(d, c + 1))
     }
 
-    pub fn substituted(self, j: usize, term: Expression) -> Self {
+    pub fn substituted(self, j: usize, term: Expression) -> Abstraction {
         Abstraction::new(
             self.name,
             self.expression.substituted(j + 1, term.shifted(1, 0)),
