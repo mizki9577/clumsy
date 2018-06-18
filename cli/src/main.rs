@@ -74,7 +74,7 @@ fn repl(history: &Option<PathBuf>) {
 }
 
 fn eval(source: &str) {
-    let tokens = &mut Lexer::new(source).peekable();
+    let tokens = &mut Lexer::new(source);
     match parser::parse(tokens).map(|ast| {
         let expression = Expression::from_ast_program(&ast, &mut HashMap::new());
         expression.evaluate()

@@ -9,6 +9,7 @@ pub struct Lexer<'a> {
     line: usize,
     column: usize,
     state: LexerState,
+    peeked: Option<Token>,
 }
 
 enum LexerState {
@@ -27,10 +28,15 @@ impl<'a> Lexer<'a> {
             line: 0,
             column: 0,
             state: LexerState::Initial,
+            peeked: None,
         }
     }
 
-    fn next_token(&mut self) -> Token {
+    pub fn next(&mut self) -> Token {
+        if self.peeked.is_some() {
+            return self.peeked.take().unwrap();
+        }
+
         loop {
             self.state = match self.state {
                 LexerState::Initial => match self.source_next() {
@@ -93,6 +99,18 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    pub fn peek(&mut self) -> &Token {
+        if self.peeked.is_none() {
+            self.peeked = Some(self.next());
+        }
+
+        if let Some(ref peeked) = self.peeked {
+            peeked
+        } else {
+            unreachable!();
+        }
+    }
+
     fn source_next(&mut self) -> Option<char> {
         if let Some('\n') = self.source.peek() {
             self.line += 1;
@@ -104,33 +122,29 @@ impl<'a> Lexer<'a> {
     }
 }
 
-impl<'a> Iterator for Lexer<'a> {
-    type Item = Token;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        Some(self.next_token())
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
     fn lexer_test() {
-        assert_eq!(
-            vec![
-                Token::new(TokenType::LeftBracket, 0, 0),
-                Token::new(TokenType::Lambda, 0, 1),
-                Token::new(TokenType::Identifier("foo".to_owned()), 0, 4),
-                Token::new(TokenType::Identifier("barBaz_2000".to_owned()), 1, 10),
-                Token::new(TokenType::Dot, 2, 0),
-                Token::new(TokenType::RightBracket, 2, 1),
-                Token::new(TokenType::InvalidCharacter('^'), 2, 2),
-            ],
-            Lexer::new("(\\foo\nbarBaz_2000//@@@@\n.)^")
-                .take_while(|token| token.token_type != TokenType::EOF)
-                .collect::<Vec<_>>(),
-        );
+        let mut lexer = Lexer::new("(\\foo\nbarBaz_2000//@@@@\n.)^");
+        let mut results = vec![
+            Token::new(TokenType::LeftBracket, 0, 0),
+            Token::new(TokenType::Lambda, 0, 1),
+            Token::new(TokenType::Identifier("foo".to_owned()), 0, 4),
+            Token::new(TokenType::Identifier("barBaz_2000".to_owned()), 1, 10),
+            Token::new(TokenType::Dot, 2, 0),
+            Token::new(TokenType::RightBracket, 2, 1),
+            Token::new(TokenType::InvalidCharacter('^'), 2, 2),
+        ].into_iter();
+        loop {
+            let expected = lexer.next();
+            if expected.token_type == TokenType::EOF {
+                break;
+            }
+            let result = results.next().unwrap();
+            assert_eq!(expected, result);
+        }
     }
 }
