@@ -74,18 +74,13 @@ fn parse_abstraction(tokens: &mut Peekable<Lexer>) -> Result<ast::AbstractionExp
 
 fn parse_parameters(tokens: &mut Peekable<Lexer>) -> Result<Vec<ast::Identifier>> {
     let mut parameters = Vec::new();
-    loop {
-        if let Some(token) = tokens.peek() {
-            if let TokenType::Identifier(_) = token.token_type {
-                parameters.push(parse_identifier(tokens)?);
-            } else {
-                break;
-            }
-        } else {
-            unreachable!()
+    while let Some(token) = tokens.peek() {
+        match token.token_type {
+            TokenType::Identifier(_) => parameters.push(parse_identifier(tokens)?),
+            _ => return Ok(parameters),
         }
     }
-    Ok(parameters)
+    unreachable!()
 }
 
 fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::ApplicationExpression> {
