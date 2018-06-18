@@ -16,7 +16,6 @@ impl Abstraction {
         T: Into<String>,
         U: Into<Expression>,
     {
-        // TODO I think we have to assign a De Bruijn's Index here.
         Abstraction {
             name: name.into(),
             expression: box expression.into(),

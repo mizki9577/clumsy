@@ -17,8 +17,8 @@ impl Variable {
         U: Into<String>,
     {
         Variable {
-            name: name.into(),
             index: index.into(),
+            name: name.into(),
         }
     }
 
