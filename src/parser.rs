@@ -33,10 +33,10 @@ fn parse_statement(tokens: &mut Peekable<Lexer>) -> Result<ast::Statement> {
     let result = match tokens.peek() {
         Some(token) => match token.token_type {
             TokenType::Lambda | TokenType::LeftBracket | TokenType::Identifier(_) => {
-                ast::ExpressionStatement::new(parse_expression(tokens)?).into()
+                ast::Statement::from(ast::ExpressionStatement::new(parse_expression(tokens)?))
             }
 
-            TokenType::Let => parse_let(tokens)?.into(),
+            TokenType::Let => ast::Statement::from(parse_let(tokens)?),
 
             ref found => {
                 return Err(format!(
@@ -54,9 +54,9 @@ fn parse_statement(tokens: &mut Peekable<Lexer>) -> Result<ast::Statement> {
 pub fn parse_expression(tokens: &mut Peekable<Lexer>) -> Result<ast::Expression> {
     match tokens.peek() {
         Some(token) => match token.token_type {
-            TokenType::Lambda => Ok(parse_abstraction(tokens)?.into()),
+            TokenType::Lambda => Ok(ast::Expression::from(parse_abstraction(tokens)?)),
             TokenType::LeftBracket | TokenType::Identifier(_) => {
-                Ok(parse_application(tokens)?.into())
+                Ok(ast::Expression::from(parse_application(tokens)?))
             }
             ref found => Err(format!("Expected '\\', '(' or Variable, found {}", found)),
         },
@@ -101,7 +101,7 @@ fn parse_application(tokens: &mut Peekable<Lexer>) -> Result<ast::ApplicationExp
                 expect(tokens, &TokenType::RightBracket)?;
                 expression
             }
-            TokenType::Lambda => parse_abstraction(tokens)?.into(),
+            TokenType::Lambda => ast::Expression::from(parse_abstraction(tokens)?),
             _ => break,
         });
     }

@@ -67,7 +67,7 @@ impl<'a> From<&'a ast::ApplicationExpression> for Expression {
                 |callee, argument| Expression::Application(Application::new(callee, argument)),
             )
         } else {
-            callee.into()
+            Expression::from(callee)
         }
     }
 }

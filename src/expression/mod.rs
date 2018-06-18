@@ -63,14 +63,14 @@ impl<'a> From<&'a ast::Expression> for Expression {
     fn from(value: &ast::Expression) -> Expression {
         let mut result = match value {
             ast::Expression::Variable(ast::VariableExpression { identifier }) => {
-                Expression::Variable(identifier.into())
+                Expression::Variable(Variable::from(identifier))
             }
 
             ast::Expression::Abstraction(abstraction) => {
-                Expression::Abstraction(abstraction.into())
+                Expression::Abstraction(Abstraction::from(abstraction))
             }
 
-            ast::Expression::Application(application) => application.into(),
+            ast::Expression::Application(application) => Expression::from(application),
         };
 
         result.assign_indices(&mut HashMap::new());
@@ -82,19 +82,21 @@ impl<'a> From<&'a ast::Program> for Expression {
     fn from(value: &ast::Program) -> Expression {
         let ast::Program(statements) = value;
 
-        let mut iter = statements.iter().rev();
+        let mut iter = statements.iter();
         if let Some(ast::Statement::Expression(ast::ExpressionStatement { expression: result })) =
-            iter.next()
+            iter.next_back()
         {
-            let mut result = iter.fold(result.into(), |result, statement| match statement {
-                ast::Statement::Expression(..) => unimplemented!(),
-                ast::Statement::Let(ast::LetStatement {
-                    variable: ast::Identifier(variable),
-                    expression,
-                }) => Expression::Application(Application::new(
-                    Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
-                    expression,
-                )),
+            let mut result = iter.rfold(Expression::from(result), |result, statement| {
+                match statement {
+                    ast::Statement::Expression(..) => unimplemented!(),
+                    ast::Statement::Let(ast::LetStatement {
+                        variable: ast::Identifier(variable),
+                        expression,
+                    }) => Expression::Application(Application::new(
+                        Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
+                        expression,
+                    )),
+                }
             });
             result.assign_indices(&mut HashMap::new()); // FIXME: We are currently calling this twice. DAS IST GUT NICHT.
             result
