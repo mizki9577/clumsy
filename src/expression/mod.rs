@@ -98,7 +98,7 @@ impl<'a> From<&'a ast::Program> for Expression {
                     )),
                 }
             });
-            result.assign_indices(&mut HashMap::new()); // FIXME: We are currently calling this twice. DAS IST GUT NICHT.
+            result.assign_indices(&mut HashMap::new());
             result
         } else {
             unimplemented!()
