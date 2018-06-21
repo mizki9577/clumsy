@@ -12,7 +12,8 @@ Try it now: https://mizkichan.github.io/clumsy/
 - Lazy evaulation
 
 ## TODO
-- Some standard library
+- Module system
+- Standard library
 - Calling C functions (FFI)
 - Documents
 - Type system
