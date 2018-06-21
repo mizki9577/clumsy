@@ -60,7 +60,7 @@ impl Display for TokenType {
             TokenType::Equal => write!(f, "'='"),
             TokenType::Semicolon => write!(f, "';'"),
             TokenType::Let => write!(f, "'let'"),
-            TokenType::Identifier(token) => write!(f, r#""{}""#, token.as_str()),
+            TokenType::Identifier(identifier) => write!(f, r#""{}""#, identifier),
             TokenType::EOF => write!(f, "EOF"),
             TokenType::InvalidCharacter(c) => write!(f, "'{}'", c),
         }
