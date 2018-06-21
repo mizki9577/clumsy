@@ -85,25 +85,26 @@ impl<'a> From<&'a ast::Program> for Expression {
         let ast::Program(statements) = value;
 
         let mut iter = statements.iter();
-        if let Some(ast::Statement::Expression(ast::ExpressionStatement { expression: result })) =
-            iter.next_back()
-        {
-            let mut result = iter.rfold(Expression::from(result), |result, statement| {
-                match statement {
-                    ast::Statement::Expression(..) => unimplemented!(),
-                    ast::Statement::Let(ast::LetStatement {
-                        variable: ast::Identifier(variable),
-                        expression,
-                    }) => Expression::Application(Application::new(
-                        Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
-                        expression,
-                    )),
-                }
-            });
-            result.assign_indices(&mut HashMap::new());
-            result
-        } else {
-            unimplemented!()
+        match iter.next_back() {
+            Some(ast::Statement::Expression(ast::ExpressionStatement { expression: result })) => {
+                let mut result = iter.rfold(Expression::from(result), |result, statement| {
+                    match statement {
+                        ast::Statement::Expression(..) => unimplemented!(),
+                        ast::Statement::Let(ast::LetStatement {
+                            variable: ast::Identifier(variable),
+                            expression,
+                        }) => Expression::Application(Application::new(
+                            Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
+                            expression,
+                        )),
+                    }
+                });
+                result.assign_indices(&mut HashMap::new());
+                result
+            }
+
+            Some(ast::Statement::Let(..)) => unimplemented!(),
+            None => unreachable!(),
         }
     }
 }
