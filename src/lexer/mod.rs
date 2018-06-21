@@ -19,6 +19,7 @@ enum LexerState {
     Whitespace,
     FirstSlash,
     Comment,
+    Number(Option<String>),
 }
 
 impl<'a> Lexer<'a> {
@@ -48,9 +49,10 @@ impl<'a> Lexer<'a> {
                     Some(';') => LexerState::Return(Some(TokenType::Semicolon)),
                     Some('/') => LexerState::FirstSlash,
                     Some(c) if c.is_ascii_whitespace() => LexerState::Whitespace,
-                    Some(c) if c.is_ascii_alphanumeric() || c == '_' => {
+                    Some(c) if c.is_ascii_alphabetic() || c == '_' => {
                         LexerState::Word(Some(c.to_string()))
                     }
+                    Some(c) if c.is_ascii_digit() => LexerState::Number(Some(c.to_string())),
                     Some(c) => LexerState::Return(Some(TokenType::InvalidCharacter(c))),
                     None => LexerState::Return(Some(TokenType::EOF)),
                 },
@@ -95,6 +97,19 @@ impl<'a> Lexer<'a> {
                     Some('\n') => LexerState::Initial,
                     _ => LexerState::Comment,
                 },
+
+                LexerState::Number(ref mut number) => {
+                    let mut number = number.take().unwrap();
+                    match self.source.peek() {
+                        Some(&c) if c.is_ascii_digit() => {
+                            number.push(c);
+                            self.source_next();
+                            LexerState::Number(Some(number))
+                        }
+
+                        _ => LexerState::Return(Some(TokenType::Number(number))),
+                    }
+                }
             }
         }
     }
@@ -128,7 +143,7 @@ mod test {
 
     #[test]
     fn lexer_test() {
-        let mut lexer = Lexer::new("(\\foo\nbarBaz_2000//@@@@\n.)^");
+        let mut lexer = Lexer::new("(\\foo\nbarBaz_2000//@@@@\n.)42^");
         let mut results = vec![
             Token::new(TokenType::LeftBracket, 0, 0),
             Token::new(TokenType::Lambda, 0, 1),
@@ -136,7 +151,8 @@ mod test {
             Token::new(TokenType::Identifier("barBaz_2000".to_owned()), 1, 10),
             Token::new(TokenType::Dot, 2, 0),
             Token::new(TokenType::RightBracket, 2, 1),
-            Token::new(TokenType::InvalidCharacter('^'), 2, 2),
+            Token::new(TokenType::Number("42".to_owned()), 2, 3),
+            Token::new(TokenType::InvalidCharacter('^'), 2, 4),
         ].into_iter();
         loop {
             let expected = lexer.next();

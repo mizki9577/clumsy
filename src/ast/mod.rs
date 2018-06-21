@@ -16,3 +16,15 @@ impl Identifier {
         Identifier(value.into())
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub struct Number(pub String);
+
+impl Number {
+    pub fn new<T>(value: T) -> Number
+    where
+        T: Into<String>,
+    {
+        Number(value.into())
+    }
+}

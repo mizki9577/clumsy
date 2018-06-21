@@ -71,6 +71,8 @@ impl<'a> From<&'a ast::Expression> for Expression {
             }
 
             ast::Expression::Application(application) => Expression::from(application),
+
+            ast::Expression::Number(number) => Expression::Abstraction(Abstraction::from(number)),
         };
 
         result.assign_indices(&mut HashMap::new());

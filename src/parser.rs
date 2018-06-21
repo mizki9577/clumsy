@@ -27,7 +27,10 @@ pub fn parse(lexer: &mut Lexer) -> Result<ast::Program> {
 
 fn parse_statement(lexer: &mut Lexer) -> Result<ast::Statement> {
     let result = match lexer.peek().get_type() {
-        TokenType::Lambda | TokenType::LeftBracket | TokenType::Identifier(..) => {
+        TokenType::Lambda
+        | TokenType::LeftBracket
+        | TokenType::Identifier(..)
+        | TokenType::Number(..) => {
             ast::Statement::from(ast::ExpressionStatement::new(parse_expression(lexer)?))
         }
 
@@ -50,6 +53,7 @@ pub fn parse_expression(lexer: &mut Lexer) -> Result<ast::Expression> {
         TokenType::LeftBracket | TokenType::Identifier(..) => {
             Ok(ast::Expression::from(parse_application(lexer)?))
         }
+        TokenType::Number(..) => Ok(ast::Expression::from(parse_number(lexer)?)),
         ref found => Err(format!("Expected '\\', '(' or identifier, found {}", found)),
     }
 }
@@ -78,6 +82,8 @@ fn parse_application(lexer: &mut Lexer) -> Result<ast::ApplicationExpression> {
                 ast::Expression::from(ast::VariableExpression::new(parse_identifier(lexer)?))
             }
 
+            TokenType::Number(..) => ast::Expression::from(parse_number(lexer)?),
+
             TokenType::LeftBracket => {
                 expect(lexer, &TokenType::LeftBracket)?;
                 let expression = parse_expression(lexer)?;
@@ -95,7 +101,7 @@ fn parse_application(lexer: &mut Lexer) -> Result<ast::ApplicationExpression> {
 
 fn parse_identifier(lexer: &mut Lexer) -> Result<ast::Identifier> {
     match lexer.next().get_type() {
-        TokenType::Identifier(variable) => Ok(ast::Identifier::new(variable.as_str())),
+        TokenType::Identifier(identifier) => Ok(ast::Identifier::new(identifier.as_str())),
         found => Err(format!("Expected identifier, found {}", found)),
     }
 }
@@ -106,6 +112,13 @@ fn parse_let(lexer: &mut Lexer) -> Result<ast::LetStatement> {
     expect(lexer, &TokenType::Equal)?;
     let expression = parse_expression(lexer)?;
     Ok(ast::LetStatement::new(variable, expression))
+}
+
+fn parse_number(lexer: &mut Lexer) -> Result<ast::Number> {
+    match lexer.next().get_type() {
+        TokenType::Number(number) => Ok(ast::Number::new(number.as_str())),
+        found => Err(format!("Expected number, found {}", found)),
+    }
 }
 
 #[cfg(test)]

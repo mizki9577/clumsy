@@ -1,5 +1,5 @@
 use ast;
-use expression::Expression;
+use expression::{Application, Expression, Variable};
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -65,6 +65,25 @@ impl<'a> From<&'a ast::AbstractionExpression> for Abstraction {
                 Abstraction::new(parameter.as_str(), Expression::Abstraction(body))
             },
         )
+    }
+}
+
+impl<'a> From<&'a ast::Number> for Abstraction {
+    fn from(value: &ast::Number) -> Abstraction {
+        let ast::Number(value) = value;
+        let n = value.parse().unwrap(); // TODO: handle this
+
+        fn n2cn(n: usize) -> Expression {
+            match n {
+                0 => Expression::Variable(Variable::new(0, "x")),
+                n => Expression::Application(Application::new(
+                    Expression::Variable(Variable::new(1, "f")),
+                    n2cn(n - 1),
+                )),
+            }
+        }
+
+        Abstraction::new("f", Expression::Abstraction(Abstraction::new("x", n2cn(n))))
     }
 }
 
