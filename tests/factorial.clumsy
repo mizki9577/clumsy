@@ -1,8 +1,3 @@
-// Numbers
-let 1 = \f x. f x;
-let 3 = \f x. f (f (f x));
-let 6 = \f x. f (f (f (f (f (f x)))));
-
 // Arithmetic operations
 let mul = \m n f. m (n f);
 let pred = \n f x. n (\g h. h (g f)) (\u. x) (\u. u);

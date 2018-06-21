@@ -4,12 +4,14 @@ mod variable;
 pub use self::abstraction::*;
 pub use self::application::*;
 pub use self::variable::*;
+use ast::Number;
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
     Variable(VariableExpression),
     Abstraction(AbstractionExpression),
     Application(ApplicationExpression),
+    Number(Number),
 }
 
 impl From<VariableExpression> for Expression {
@@ -27,5 +29,11 @@ impl From<AbstractionExpression> for Expression {
 impl From<ApplicationExpression> for Expression {
     fn from(application: ApplicationExpression) -> Expression {
         Expression::Application(application)
+    }
+}
+
+impl From<Number> for Expression {
+    fn from(number: Number) -> Expression {
+        Expression::Number(number)
     }
 }

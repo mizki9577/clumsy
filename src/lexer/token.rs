@@ -18,6 +18,7 @@ pub enum TokenType {
     Semicolon,
     Let,
     Identifier(String),
+    Number(String),
     EOF,
     InvalidCharacter(char),
 }
@@ -61,6 +62,7 @@ impl Display for TokenType {
             TokenType::Semicolon => write!(f, "';'"),
             TokenType::Let => write!(f, "'let'"),
             TokenType::Identifier(identifier) => write!(f, r#""{}""#, identifier),
+            TokenType::Number(number) => write!(f, r#""{}""#, number),
             TokenType::EOF => write!(f, "EOF"),
             TokenType::InvalidCharacter(c) => write!(f, "'{}'", c),
         }
