@@ -140,7 +140,7 @@ mod test {
         ].into_iter();
         loop {
             let expected = lexer.next();
-            if expected.token_type == TokenType::EOF {
+            if expected.get_type() == &TokenType::EOF {
                 break;
             }
             let result = results.next().unwrap();
