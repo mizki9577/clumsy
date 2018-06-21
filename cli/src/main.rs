@@ -11,7 +11,6 @@ use clumsy::expression::Expression;
 use clumsy::lexer::Lexer;
 use clumsy::parser;
 use rustyline::error::ReadlineError;
-use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -76,7 +75,7 @@ fn repl(history: &Option<PathBuf>) {
 fn eval(source: &str) {
     let tokens = &mut Lexer::new(source);
     match parser::parse(tokens).map(|ast| {
-        let expression = Expression::from_ast_program(&ast, &mut HashMap::new());
+        let expression = Expression::from(&ast);
         expression.evaluate()
     }) {
         Ok(result) => println!("{}", result),
