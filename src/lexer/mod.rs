@@ -20,6 +20,7 @@ enum LexerState {
     FirstSlash,
     Comment,
     Number(Option<String>),
+    Character(Option<char>),
 }
 
 impl<'a> Lexer<'a> {
@@ -52,6 +53,7 @@ impl<'a> Lexer<'a> {
                     Some(c) if c.is_ascii_alphabetic() || c == '_' => {
                         LexerState::Word(Some(c.to_string()))
                     }
+                    Some('\'') => LexerState::Character(None),
                     Some(c) if c.is_ascii_digit() => LexerState::Number(Some(c.to_string())),
                     Some(c) => LexerState::Return(Some(TokenType::InvalidCharacter(c))),
                     None => LexerState::Return(Some(TokenType::EOF)),
@@ -110,6 +112,20 @@ impl<'a> Lexer<'a> {
                         _ => LexerState::Return(Some(TokenType::Number(number))),
                     }
                 }
+
+                LexerState::Character(None) => match self.source_next() {
+                    Some('\'') => LexerState::Return(Some(TokenType::InvalidCharacter('\''))),
+                    Some(character) => LexerState::Character(Some(character)),
+                    None => LexerState::Return(Some(TokenType::EOF)),
+                },
+
+                LexerState::Character(Some(character)) => match self.source_next() {
+                    Some('\'') => LexerState::Return(Some(TokenType::Character(character))),
+                    Some(character) => {
+                        LexerState::Return(Some(TokenType::InvalidCharacter(character)))
+                    }
+                    None => LexerState::Return(Some(TokenType::EOF)),
+                },
             }
         }
     }
@@ -143,12 +159,13 @@ mod test {
 
     #[test]
     fn lexer_test() {
-        let mut lexer = Lexer::new("(\\foo\nbarBaz_2000//@@@@\n.)42^");
+        let mut lexer = Lexer::new("(\\foo\nbarBaz_2000'*'//@@@@\n.)42^");
         let mut results = vec![
             Token::new(TokenType::LeftBracket, 0, 0),
             Token::new(TokenType::Lambda, 0, 1),
             Token::new(TokenType::Identifier("foo".to_owned()), 0, 4),
             Token::new(TokenType::Identifier("barBaz_2000".to_owned()), 1, 10),
+            Token::new(TokenType::Character('*'), 1, 13),
             Token::new(TokenType::Dot, 2, 0),
             Token::new(TokenType::RightBracket, 2, 1),
             Token::new(TokenType::Number("42".to_owned()), 2, 3),

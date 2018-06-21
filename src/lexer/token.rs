@@ -19,6 +19,7 @@ pub enum TokenType {
     Let,
     Identifier(String),
     Number(String),
+    Character(char),
     EOF,
     InvalidCharacter(char),
 }
@@ -63,6 +64,7 @@ impl Display for TokenType {
             TokenType::Let => write!(f, "'let'"),
             TokenType::Identifier(identifier) => write!(f, r#""{}""#, identifier),
             TokenType::Number(number) => write!(f, r#""{}""#, number),
+            TokenType::Character(character) => write!(f, "'{}'", character),
             TokenType::EOF => write!(f, "EOF"),
             TokenType::InvalidCharacter(c) => write!(f, "'{}'", c),
         }
