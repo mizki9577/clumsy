@@ -3,9 +3,9 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialEq)]
 pub struct Token {
-    pub token_type: TokenType,
-    pub line: usize,
-    pub column: usize,
+    token_type: TokenType,
+    line: usize,
+    column: usize,
 }
 
 #[derive(Debug, PartialEq)]
@@ -29,6 +29,18 @@ impl Token {
             line,
             column,
         }
+    }
+
+    pub fn get_type(&self) -> &TokenType {
+        &self.token_type
+    }
+
+    pub fn line(&self) -> usize {
+        self.line
+    }
+
+    pub fn column(&self) -> usize {
+        self.column
     }
 }
 
