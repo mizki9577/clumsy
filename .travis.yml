@@ -25,7 +25,7 @@ before_install:
   echo "Building kcov..." &&
   pushd $HOME/kcov &&
   if [ -d .git ]; then git pull; else git clone --depth 1 https://github.com/SimonKagstrom/kcov.git .; fi &&
-  cmake . && make && popd
+  cmake . && (make || true) && popd
 
 after_success: |
   echo "Uploading coverage..." &&
