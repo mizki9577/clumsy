@@ -17,26 +17,35 @@ const styles = () => ({
   },
 })
 
-const initial_source = `let 1 = \\f x. f x;
-let 3 = \\f x. f (f (f x));
-let 6 = \\f x. f (f (f (f (f (f x)))));
+const initial_source = String.raw`// Arithmetic operations
+let mul = \m n f. m (n f);
+let pred = \n f x. n (\g h. h (g f)) (\u. x) (\u. u);
+let sub = \m n. n pred m;
 
-let mul = \\m n f. m (n f);
-let pred = \\n f x. n (\\g h. h (g f)) (\\u. x) (\\u. u);
-let sub = \\m n. n pred m;
+// Boolean values
+let true = \x y. x;
+let false = \x y. y;
 
-let true = \\x y. x;
-let false = \\x y. y;
-let and = \\p q. p q p;
-let is_zero = \\n. n (\\x. false) true;
-let is_equal = \\m n. and (is_zero (sub m n)) (is_zero (sub n m));
+// Predicates
+let and = \p q. p q p;
+let cond = \p then else. p then else;
+let is_zero = \n. n (\x. false) true;
+let is_equal = \m n. and (is_zero (sub m n)) (is_zero (sub n m));
 
-let Z = \\f. (\\x. f (\\y. x x y)) (\\x. f (\\y. x x y));
+// Fixed point combinator
+let Y = \f. (\x. f (x x)) (\x. f (x x));
 
-let factorial_impl = \\f n. (is_zero n) 1 (mul n (f (pred n)));
-let factorial = Z factorial_impl;
+// Factorial function
+let factorial_impl = \f n.
+    cond (is_zero n)
+        1
+        (mul n (f (pred n)));
+let factorial = Y factorial_impl;
 
+// Go!
 is_equal (factorial 3) 6;`
+
+// vim: set ts=4 sw=4 et:
 
 class App extends React.Component {
   constructor(props) {
