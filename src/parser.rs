@@ -17,7 +17,8 @@ pub fn parse(lexer: &mut Lexer) -> Result<ast::Program> {
     while let TokenType::Lambda
     | TokenType::LeftBracket
     | TokenType::Let
-    | TokenType::Identifier(..) = lexer.peek().get_type()
+    | TokenType::Identifier(..)
+    | TokenType::Number(..) = lexer.peek().get_type()
     {
         statements.push(parse_statement(lexer)?)
     }
@@ -50,10 +51,9 @@ fn parse_statement(lexer: &mut Lexer) -> Result<ast::Statement> {
 pub fn parse_expression(lexer: &mut Lexer) -> Result<ast::Expression> {
     match lexer.peek().get_type() {
         TokenType::Lambda => Ok(ast::Expression::from(parse_abstraction(lexer)?)),
-        TokenType::LeftBracket | TokenType::Identifier(..) => {
+        TokenType::LeftBracket | TokenType::Identifier(..) | TokenType::Number(..) => {
             Ok(ast::Expression::from(parse_application(lexer)?))
         }
-        TokenType::Number(..) => Ok(ast::Expression::from(parse_number(lexer)?)),
         ref found => Err(format!("Expected '\\', '(' or identifier, found {}", found)),
     }
 }

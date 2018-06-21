@@ -71,19 +71,18 @@ impl<'a> From<&'a ast::AbstractionExpression> for Abstraction {
 impl<'a> From<&'a ast::Number> for Abstraction {
     fn from(value: &ast::Number) -> Abstraction {
         let ast::Number(value) = value;
-        let n = value.parse().unwrap(); // TODO: handle this
+        let mut n = value.parse::<usize>().unwrap(); // TODO: handle this
+        let mut result = Expression::Variable(Variable::new(0, "x"));
 
-        fn n2cn(n: usize) -> Expression {
-            match n {
-                0 => Expression::Variable(Variable::new(0, "x")),
-                n => Expression::Application(Application::new(
-                    Expression::Variable(Variable::new(1, "f")),
-                    n2cn(n - 1),
-                )),
-            }
+        while n > 0 {
+            result = Expression::Application(Application::new(
+                Expression::Variable(Variable::new(1, "f")),
+                result,
+            ));
+            n -= 1;
         }
 
-        Abstraction::new("f", Expression::Abstraction(Abstraction::new("x", n2cn(n))))
+        Abstraction::new("f", Expression::Abstraction(Abstraction::new("x", result)))
     }
 }
 
