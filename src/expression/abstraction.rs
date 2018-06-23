@@ -6,8 +6,8 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Abstraction {
-    name: String,
-    expression: Box<Expression>,
+    pub name: String,
+    pub expression: Box<Expression>,
 }
 
 impl Abstraction {
@@ -51,6 +51,10 @@ impl Abstraction {
             self.name,
             self.expression.substituted(j + 1, term.shifted(1, 0)),
         )
+    }
+
+    pub fn is_name_occurs_free(&self) -> bool {
+        self.expression.has_free_occurence_of(0)
     }
 }
 

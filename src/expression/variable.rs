@@ -6,8 +6,8 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
-    name: String,
-    index: Option<usize>,
+    pub name: String,
+    pub index: Option<usize>,
 }
 
 impl Variable {

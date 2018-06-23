@@ -6,8 +6,8 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Application {
-    callee: Box<Expression>,
-    argument: Box<Expression>,
+    pub callee: Box<Expression>,
+    pub argument: Box<Expression>,
 }
 
 impl Application {

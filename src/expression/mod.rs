@@ -34,7 +34,7 @@ impl Expression {
         current
     }
 
-    fn shifted(self, d: isize, c: usize) -> Expression {
+    pub fn shifted(self, d: isize, c: usize) -> Expression {
         match self {
             Expression::Variable(variable) => Expression::Variable(variable.shifted(d, c)),
             Expression::Abstraction(abstraction) => {
@@ -54,6 +54,22 @@ impl Expression {
             }
             Expression::Application(application) => {
                 Expression::Application(application.substituted(j, term))
+            }
+        }
+    }
+
+    pub fn has_free_occurence_of(&self, i: usize) -> bool {
+        match self {
+            Expression::Variable(Variable { index: Some(j), .. }) if *j == i => true,
+
+            Expression::Variable(..) => false,
+
+            Expression::Abstraction(Abstraction { expression, .. }) => {
+                expression.has_free_occurence_of(i + 1)
+            }
+
+            Expression::Application(Application { callee, argument }) => {
+                callee.has_free_occurence_of(i) | argument.has_free_occurence_of(i)
             }
         }
     }
