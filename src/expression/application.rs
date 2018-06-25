@@ -74,6 +74,18 @@ impl<'a> From<&'a ast::ApplicationExpression> for Expression {
 
 impl Display for Application {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, r"({} {})", self.callee, self.argument)
+        match *self.callee {
+            Expression::Variable(ref variable) => variable.fmt(f)?,
+            Expression::Abstraction(ref abstraction) => write!(f, r"({})", abstraction)?,
+            Expression::Application(ref application) => application.fmt(f)?,
+        }
+
+        f.write_str(" ")?;
+
+        match *self.argument {
+            Expression::Variable(ref variable) => variable.fmt(f),
+            Expression::Abstraction(ref abstraction) => write!(f, r"({})", abstraction),
+            Expression::Application(ref application) => write!(f, r"({})", application),
+        }
     }
 }

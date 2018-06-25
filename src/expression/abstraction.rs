@@ -88,6 +88,14 @@ impl<'a> From<&'a ast::Number> for Abstraction {
 
 impl Display for Abstraction {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, r"(\{}. {})", self.name, self.expression)
+        match *self.expression {
+            Expression::Variable(ref variable) => write!(f, r"\{}. {}", self.name, variable),
+            Expression::Abstraction(ref abstraction) => {
+                write!(f, r"\{} {}", self.name, &abstraction.to_string()[1..])
+            }
+            Expression::Application(ref application) => {
+                write!(f, r"\{}. {}", self.name, application)
+            }
+        }
     }
 }

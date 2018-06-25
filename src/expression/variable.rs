@@ -63,6 +63,6 @@ impl<'a> From<&'a ast::Identifier> for Variable {
 
 impl Display for Variable {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, r"{}", self.name)
+        f.write_str(&self.name)
     }
 }
