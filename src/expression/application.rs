@@ -54,6 +54,14 @@ impl Application {
             self.argument.substituted(j, cloned_term),
         )
     }
+
+    pub fn is_reducible(&self) -> bool {
+        match *self.callee {
+            Expression::Variable(..) => false,
+            Expression::Abstraction(..) => true,
+            Expression::Application(ref callee) => callee.is_reducible(),
+        }
+    }
 }
 
 impl<'a> From<&'a ast::ApplicationExpression> for Expression {

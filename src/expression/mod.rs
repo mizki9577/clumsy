@@ -26,12 +26,27 @@ impl Expression {
         }
     }
 
-    pub fn evaluate(self) -> Expression {
-        let mut current = self;
-        while let Expression::Application(application) = current {
-            current = application.evaluate1();
+    pub fn is_reducible(&self) -> bool {
+        match self {
+            Expression::Variable(..) => false,
+            Expression::Abstraction(..) => false,
+            Expression::Application(application) => application.is_reducible(),
         }
-        current
+    }
+
+    pub fn evaluate(mut self) -> Expression {
+        while self.is_reducible() {
+            self = self.evaluate1();
+        }
+        self
+    }
+
+    fn evaluate1(self) -> Expression {
+        if let Expression::Application(application) = self {
+            application.evaluate1()
+        } else {
+            self
+        }
     }
 
     fn shifted(self, d: isize, c: usize) -> Expression {
