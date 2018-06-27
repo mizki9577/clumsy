@@ -1,0 +1,206 @@
+use ast::{Abstraction, Application, Expression, Variable};
+use cst::{
+    AbstractionExpression, ApplicationExpression, Expression as CSTExpression, ExpressionStatement,
+    Identifier, LetStatement, Number, Program, Statement, VariableExpression,
+};
+use std::collections::HashMap;
+
+impl<'a> From<&'a CSTExpression> for Expression {
+    fn from(value: &CSTExpression) -> Expression {
+        let mut result = match value {
+            CSTExpression::Variable(VariableExpression { identifier }) => {
+                Expression::Variable(Variable::from(identifier))
+            }
+
+            CSTExpression::Abstraction(abstraction) => {
+                Expression::Abstraction(Abstraction::from(abstraction))
+            }
+
+            CSTExpression::Application(application) => Expression::from(application),
+
+            CSTExpression::Number(number) => Expression::Abstraction(Abstraction::from(number)),
+        };
+
+        result.assign_indices(&mut HashMap::new());
+        result
+    }
+}
+
+impl<'a> From<&'a Program> for Expression {
+    fn from(value: &Program) -> Expression {
+        let Program(statements) = value;
+
+        let mut iter = statements.iter();
+        match iter.next_back() {
+            Some(Statement::Expression(ExpressionStatement { expression: result })) => {
+                let mut result = iter.rfold(Expression::from(result), |result, statement| {
+                    match statement {
+                        Statement::Expression(..) => unimplemented!(),
+                        Statement::Let(LetStatement {
+                            variable: Identifier(variable),
+                            expression,
+                        }) => Expression::Application(Application::new(
+                            Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
+                            expression,
+                        )),
+                    }
+                });
+                result.assign_indices(&mut HashMap::new());
+                result
+            }
+
+            Some(Statement::Let(..)) => unimplemented!(),
+            None => unreachable!(),
+        }
+    }
+}
+
+impl<'a> From<&'a Identifier> for Variable {
+    fn from(value: &Identifier) -> Variable {
+        let Identifier(identifier) = value;
+        Variable::new(None, identifier.as_str())
+    }
+}
+
+impl<'a> From<&'a AbstractionExpression> for Abstraction {
+    fn from(value: &AbstractionExpression) -> Abstraction {
+        let mut iter = value.parameters.iter();
+        let Identifier(parameter) = iter.next_back().unwrap();
+
+        iter.rfold(
+            Abstraction::new(parameter.as_str(), &*value.expression),
+            |body, Identifier(parameter)| {
+                Abstraction::new(parameter.as_str(), Expression::Abstraction(body))
+            },
+        )
+    }
+}
+
+impl<'a> From<&'a Number> for Abstraction {
+    fn from(value: &Number) -> Abstraction {
+        let Number(value) = value;
+        let mut n = value.parse::<usize>().unwrap(); // TODO: handle this
+        let mut result = Expression::Variable(Variable::new(0, "x"));
+
+        while n > 0 {
+            result = Expression::Application(Application::new(
+                Expression::Variable(Variable::new(1, "f")),
+                result,
+            ));
+            n -= 1;
+        }
+
+        Abstraction::new("f", Expression::Abstraction(Abstraction::new("x", result)))
+    }
+}
+
+impl<'a> From<&'a ApplicationExpression> for Expression {
+    fn from(value: &ApplicationExpression) -> Expression {
+        let mut iter = value.expressions.iter();
+        let callee = iter.next().unwrap();
+
+        if let Some(argument) = iter.next() {
+            iter.fold(
+                Expression::Application(Application::new(callee, argument)),
+                |callee, argument| Expression::Application(Application::new(callee, argument)),
+            )
+        } else {
+            Expression::from(callee)
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use cst;
+
+    #[test]
+    fn translate_abstraction() {
+        let result = Expression::from(&cst::Expression::from(cst::AbstractionExpression::new(
+            vec![cst::Identifier::new("x"), cst::Identifier::new("x")],
+            cst::VariableExpression::new(cst::Identifier::new("x")),
+        )));
+
+        let expected = Expression::Abstraction(Abstraction::new(
+            "x",
+            Expression::Abstraction(Abstraction::new(
+                "x",
+                Expression::Variable(Variable::new(Some(0), "x")),
+            )),
+        ));
+        assert_eq!(expected, result);
+
+        let b = Expression::from(&cst::Expression::from(cst::AbstractionExpression::new(
+            vec![cst::Identifier::new("x")],
+            cst::ApplicationExpression::new(vec![
+                cst::Expression::from(cst::AbstractionExpression::new(
+                    vec![cst::Identifier::new("x")],
+                    cst::VariableExpression::new(cst::Identifier::new("x")),
+                )),
+                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("x"))),
+            ]),
+        )));
+        let expected = Expression::Abstraction(Abstraction::new(
+            "x",
+            Expression::Application(Application::new(
+                Expression::Abstraction(Abstraction::new(
+                    "x",
+                    Expression::Variable(Variable::new(Some(0), "x")),
+                )),
+                Expression::Variable(Variable::new(Some(0), "x")),
+            )),
+        ));
+        assert_eq!(expected, b);
+    }
+
+    #[test]
+    fn translate_application() {
+        let a = Expression::from(&cst::Expression::from(cst::ApplicationExpression::new(
+            vec![
+                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("a"))),
+                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("b"))),
+                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("c"))),
+            ],
+        )));
+        let expected = Expression::Application(Application::new(
+            Expression::Application(Application::new(
+                Expression::Variable(Variable::new(None, "a")),
+                Expression::Variable(Variable::new(None, "b")),
+            )),
+            Expression::Variable(Variable::new(None, "c")),
+        ));
+        assert_eq!(expected, a);
+    }
+
+    #[test]
+    fn translate_let_statement() {
+        let expected = Expression::Application(Application::new(
+            Expression::Abstraction(Abstraction::new(
+                "id",
+                Expression::Variable(Variable::new(0, "id")),
+            )),
+            Expression::Abstraction(Abstraction::new(
+                "x",
+                Expression::Variable(Variable::new(0, "x")),
+            )),
+        ));
+        let result = Expression::from(&cst::Program(vec![
+            cst::Statement::from(cst::LetStatement::new(
+                cst::Identifier::new("id"),
+                cst::Expression::from(cst::AbstractionExpression::new(
+                    vec![cst::Identifier::new("x")],
+                    cst::Expression::from(cst::ApplicationExpression::new(vec![
+                        cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new(
+                            "x",
+                        ))),
+                    ])),
+                )),
+            )),
+            cst::Statement::from(cst::ExpressionStatement::new(cst::Expression::from(
+                cst::VariableExpression::new(cst::Identifier::new("id")),
+            ))),
+        ]));
+        assert_eq!(expected, result);
+    }
+}

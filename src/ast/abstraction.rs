@@ -1,5 +1,4 @@
-use ast::{Application, Expression, Variable};
-use cst;
+use ast::Expression;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -51,38 +50,6 @@ impl Abstraction {
             self.name,
             self.expression.substituted(j + 1, term.shifted(1, 0)),
         )
-    }
-}
-
-impl<'a> From<&'a cst::AbstractionExpression> for Abstraction {
-    fn from(value: &cst::AbstractionExpression) -> Abstraction {
-        let mut iter = value.parameters.iter();
-        let cst::Identifier(parameter) = iter.next_back().unwrap();
-
-        iter.rfold(
-            Abstraction::new(parameter.as_str(), &*value.expression),
-            |body, cst::Identifier(parameter)| {
-                Abstraction::new(parameter.as_str(), Expression::Abstraction(body))
-            },
-        )
-    }
-}
-
-impl<'a> From<&'a cst::Number> for Abstraction {
-    fn from(value: &cst::Number) -> Abstraction {
-        let cst::Number(value) = value;
-        let mut n = value.parse::<usize>().unwrap(); // TODO: handle this
-        let mut result = Expression::Variable(Variable::new(0, "x"));
-
-        while n > 0 {
-            result = Expression::Application(Application::new(
-                Expression::Variable(Variable::new(1, "f")),
-                result,
-            ));
-            n -= 1;
-        }
-
-        Abstraction::new("f", Expression::Abstraction(Abstraction::new("x", result)))
     }
 }
 

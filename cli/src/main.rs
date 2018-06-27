@@ -7,7 +7,7 @@ extern crate clumsy;
 extern crate rustyline;
 
 use ansi_term::Color;
-use clumsy::expression::Expression;
+use clumsy::ast::Expression;
 use clumsy::lexer::Lexer;
 use clumsy::parser;
 use rustyline::error::ReadlineError;

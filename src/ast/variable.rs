@@ -1,5 +1,4 @@
 use ast::Expression;
-use cst;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -51,13 +50,6 @@ impl Variable {
 
             _ => Expression::Variable(self),
         }
-    }
-}
-
-impl<'a> From<&'a cst::Identifier> for Variable {
-    fn from(value: &cst::Identifier) -> Variable {
-        let cst::Identifier(identifier) = value;
-        Variable::new(None, identifier.as_str())
     }
 }
 

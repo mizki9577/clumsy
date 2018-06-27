@@ -1,5 +1,4 @@
 use ast::Expression;
-use cst;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -60,22 +59,6 @@ impl Application {
             Expression::Variable(..) => false,
             Expression::Abstraction(..) => true,
             Expression::Application(ref callee) => callee.is_reducible(),
-        }
-    }
-}
-
-impl<'a> From<&'a cst::ApplicationExpression> for Expression {
-    fn from(value: &cst::ApplicationExpression) -> Expression {
-        let mut iter = value.expressions.iter();
-        let callee = iter.next().unwrap();
-
-        if let Some(argument) = iter.next() {
-            iter.fold(
-                Expression::Application(Application::new(callee, argument)),
-                |callee, argument| Expression::Application(Application::new(callee, argument)),
-            )
-        } else {
-            Expression::from(callee)
         }
     }
 }

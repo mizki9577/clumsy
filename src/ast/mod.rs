@@ -5,7 +5,6 @@ pub use self::abstraction::*;
 pub use self::application::*;
 pub use self::variable::*;
 
-use cst;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -74,56 +73,6 @@ impl Expression {
     }
 }
 
-impl<'a> From<&'a cst::Expression> for Expression {
-    fn from(value: &cst::Expression) -> Expression {
-        let mut result = match value {
-            cst::Expression::Variable(cst::VariableExpression { identifier }) => {
-                Expression::Variable(Variable::from(identifier))
-            }
-
-            cst::Expression::Abstraction(abstraction) => {
-                Expression::Abstraction(Abstraction::from(abstraction))
-            }
-
-            cst::Expression::Application(application) => Expression::from(application),
-
-            cst::Expression::Number(number) => Expression::Abstraction(Abstraction::from(number)),
-        };
-
-        result.assign_indices(&mut HashMap::new());
-        result
-    }
-}
-
-impl<'a> From<&'a cst::Program> for Expression {
-    fn from(value: &cst::Program) -> Expression {
-        let cst::Program(statements) = value;
-
-        let mut iter = statements.iter();
-        match iter.next_back() {
-            Some(cst::Statement::Expression(cst::ExpressionStatement { expression: result })) => {
-                let mut result = iter.rfold(Expression::from(result), |result, statement| {
-                    match statement {
-                        cst::Statement::Expression(..) => unimplemented!(),
-                        cst::Statement::Let(cst::LetStatement {
-                            variable: cst::Identifier(variable),
-                            expression,
-                        }) => Expression::Application(Application::new(
-                            Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
-                            expression,
-                        )),
-                    }
-                });
-                result.assign_indices(&mut HashMap::new());
-                result
-            }
-
-            Some(cst::Statement::Let(..)) => unimplemented!(),
-            None => unreachable!(),
-        }
-    }
-}
-
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
@@ -137,95 +86,6 @@ impl Display for Expression {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn translate_abstraction() {
-        let result = Expression::from(&cst::Expression::from(cst::AbstractionExpression::new(
-            vec![cst::Identifier::new("x"), cst::Identifier::new("x")],
-            cst::VariableExpression::new(cst::Identifier::new("x")),
-        )));
-
-        let expected = Expression::Abstraction(Abstraction::new(
-            "x",
-            Expression::Abstraction(Abstraction::new(
-                "x",
-                Expression::Variable(Variable::new(Some(0), "x")),
-            )),
-        ));
-        assert_eq!(expected, result);
-
-        let b = Expression::from(&cst::Expression::from(cst::AbstractionExpression::new(
-            vec![cst::Identifier::new("x")],
-            cst::ApplicationExpression::new(vec![
-                cst::Expression::from(cst::AbstractionExpression::new(
-                    vec![cst::Identifier::new("x")],
-                    cst::VariableExpression::new(cst::Identifier::new("x")),
-                )),
-                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("x"))),
-            ]),
-        )));
-        let expected = Expression::Abstraction(Abstraction::new(
-            "x",
-            Expression::Application(Application::new(
-                Expression::Abstraction(Abstraction::new(
-                    "x",
-                    Expression::Variable(Variable::new(Some(0), "x")),
-                )),
-                Expression::Variable(Variable::new(Some(0), "x")),
-            )),
-        ));
-        assert_eq!(expected, b);
-    }
-
-    #[test]
-    fn translate_application() {
-        let a = Expression::from(&cst::Expression::from(cst::ApplicationExpression::new(
-            vec![
-                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("a"))),
-                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("b"))),
-                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("c"))),
-            ],
-        )));
-        let expected = Expression::Application(Application::new(
-            Expression::Application(Application::new(
-                Expression::Variable(Variable::new(None, "a")),
-                Expression::Variable(Variable::new(None, "b")),
-            )),
-            Expression::Variable(Variable::new(None, "c")),
-        ));
-        assert_eq!(expected, a);
-    }
-
-    #[test]
-    fn translate_let_statement() {
-        let expected = Expression::Application(Application::new(
-            Expression::Abstraction(Abstraction::new(
-                "id",
-                Expression::Variable(Variable::new(0, "id")),
-            )),
-            Expression::Abstraction(Abstraction::new(
-                "x",
-                Expression::Variable(Variable::new(0, "x")),
-            )),
-        ));
-        let result = Expression::from(&cst::Program(vec![
-            cst::Statement::from(cst::LetStatement::new(
-                cst::Identifier::new("id"),
-                cst::Expression::from(cst::AbstractionExpression::new(
-                    vec![cst::Identifier::new("x")],
-                    cst::Expression::from(cst::ApplicationExpression::new(vec![
-                        cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new(
-                            "x",
-                        ))),
-                    ])),
-                )),
-            )),
-            cst::Statement::from(cst::ExpressionStatement::new(cst::Expression::from(
-                cst::VariableExpression::new(cst::Identifier::new("id")),
-            ))),
-        ]));
-        assert_eq!(expected, result);
-    }
 
     #[test]
     fn test_shift() {

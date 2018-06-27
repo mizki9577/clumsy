@@ -2,6 +2,7 @@
 
 pub mod ast;
 pub mod cst;
+pub mod cst2ast;
 pub mod lexer;
 pub mod parser;
 pub mod token;
