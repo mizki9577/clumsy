@@ -1,8 +1,6 @@
-mod token;
-
-pub use self::token::{Token, TokenType};
 use std::iter::Peekable;
 use std::str::Chars;
+use token::{Token, TokenType};
 
 pub struct Lexer<'a> {
     source: Peekable<Chars<'a>>,

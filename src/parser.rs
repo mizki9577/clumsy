@@ -1,6 +1,7 @@
-use ast;
-use lexer::{Lexer, TokenType};
+use cst;
+use lexer::Lexer;
 use std::result;
+use token::TokenType;
 
 type Result<T> = result::Result<T, String>;
 
@@ -11,7 +12,7 @@ fn expect(lexer: &mut Lexer, expected: &TokenType) -> Result<()> {
     }
 }
 
-pub fn parse(lexer: &mut Lexer) -> Result<ast::Program> {
+pub fn parse(lexer: &mut Lexer) -> Result<cst::Program> {
     let mut statements = Vec::new();
 
     while let TokenType::Lambda
@@ -23,19 +24,19 @@ pub fn parse(lexer: &mut Lexer) -> Result<ast::Program> {
         statements.push(parse_statement(lexer)?)
     }
 
-    Ok(ast::Program(statements))
+    Ok(cst::Program(statements))
 }
 
-fn parse_statement(lexer: &mut Lexer) -> Result<ast::Statement> {
+fn parse_statement(lexer: &mut Lexer) -> Result<cst::Statement> {
     let result = match lexer.peek().get_type() {
         TokenType::Lambda
         | TokenType::LeftBracket
         | TokenType::Identifier(..)
         | TokenType::Number(..) => {
-            ast::Statement::from(ast::ExpressionStatement::new(parse_expression(lexer)?))
+            cst::Statement::from(cst::ExpressionStatement::new(parse_expression(lexer)?))
         }
 
-        TokenType::Let => ast::Statement::from(parse_let(lexer)?),
+        TokenType::Let => cst::Statement::from(parse_let(lexer)?),
 
         ref found => {
             return Err(format!(
@@ -48,25 +49,25 @@ fn parse_statement(lexer: &mut Lexer) -> Result<ast::Statement> {
     Ok(result)
 }
 
-pub fn parse_expression(lexer: &mut Lexer) -> Result<ast::Expression> {
+pub fn parse_expression(lexer: &mut Lexer) -> Result<cst::Expression> {
     match lexer.peek().get_type() {
-        TokenType::Lambda => Ok(ast::Expression::from(parse_abstraction(lexer)?)),
+        TokenType::Lambda => Ok(cst::Expression::from(parse_abstraction(lexer)?)),
         TokenType::LeftBracket | TokenType::Identifier(..) | TokenType::Number(..) => {
-            Ok(ast::Expression::from(parse_application(lexer)?))
+            Ok(cst::Expression::from(parse_application(lexer)?))
         }
         ref found => Err(format!("Expected '\\', '(' or identifier, found {}", found)),
     }
 }
 
-fn parse_abstraction(lexer: &mut Lexer) -> Result<ast::AbstractionExpression> {
+fn parse_abstraction(lexer: &mut Lexer) -> Result<cst::AbstractionExpression> {
     expect(lexer, &TokenType::Lambda)?;
     let parameters = parse_parameters(lexer)?;
     expect(lexer, &TokenType::Dot)?;
     let expression = parse_expression(lexer)?;
-    Ok(ast::AbstractionExpression::new(parameters, expression))
+    Ok(cst::AbstractionExpression::new(parameters, expression))
 }
 
-fn parse_parameters(lexer: &mut Lexer) -> Result<Vec<ast::Identifier>> {
+fn parse_parameters(lexer: &mut Lexer) -> Result<Vec<cst::Identifier>> {
     let mut parameters = Vec::new();
     while let TokenType::Identifier(..) = lexer.peek().get_type() {
         parameters.push(parse_identifier(lexer)?);
@@ -74,15 +75,15 @@ fn parse_parameters(lexer: &mut Lexer) -> Result<Vec<ast::Identifier>> {
     Ok(parameters)
 }
 
-fn parse_application(lexer: &mut Lexer) -> Result<ast::ApplicationExpression> {
+fn parse_application(lexer: &mut Lexer) -> Result<cst::ApplicationExpression> {
     let mut expressions = Vec::new();
     loop {
         expressions.push(match lexer.peek().get_type() {
             TokenType::Identifier(..) => {
-                ast::Expression::from(ast::VariableExpression::new(parse_identifier(lexer)?))
+                cst::Expression::from(cst::VariableExpression::new(parse_identifier(lexer)?))
             }
 
-            TokenType::Number(..) => ast::Expression::from(parse_number(lexer)?),
+            TokenType::Number(..) => cst::Expression::from(parse_number(lexer)?),
 
             TokenType::LeftBracket => {
                 expect(lexer, &TokenType::LeftBracket)?;
@@ -91,32 +92,32 @@ fn parse_application(lexer: &mut Lexer) -> Result<ast::ApplicationExpression> {
                 expression
             }
 
-            TokenType::Lambda => ast::Expression::from(parse_abstraction(lexer)?),
+            TokenType::Lambda => cst::Expression::from(parse_abstraction(lexer)?),
 
             _ => break,
         });
     }
-    Ok(ast::ApplicationExpression::new(expressions))
+    Ok(cst::ApplicationExpression::new(expressions))
 }
 
-fn parse_identifier(lexer: &mut Lexer) -> Result<ast::Identifier> {
+fn parse_identifier(lexer: &mut Lexer) -> Result<cst::Identifier> {
     match lexer.next().get_type() {
-        TokenType::Identifier(identifier) => Ok(ast::Identifier::new(identifier.as_str())),
+        TokenType::Identifier(identifier) => Ok(cst::Identifier::new(identifier.as_str())),
         found => Err(format!("Expected identifier, found {}", found)),
     }
 }
 
-fn parse_let(lexer: &mut Lexer) -> Result<ast::LetStatement> {
+fn parse_let(lexer: &mut Lexer) -> Result<cst::LetStatement> {
     expect(lexer, &TokenType::Let)?;
     let variable = parse_identifier(lexer)?;
     expect(lexer, &TokenType::Equal)?;
     let expression = parse_expression(lexer)?;
-    Ok(ast::LetStatement::new(variable, expression))
+    Ok(cst::LetStatement::new(variable, expression))
 }
 
-fn parse_number(lexer: &mut Lexer) -> Result<ast::Number> {
+fn parse_number(lexer: &mut Lexer) -> Result<cst::Number> {
     match lexer.next().get_type() {
-        TokenType::Number(number) => Ok(ast::Number::new(number.as_str())),
+        TokenType::Number(number) => Ok(cst::Number::new(number.as_str())),
         found => Err(format!("Expected number, found {}", found)),
     }
 }
@@ -128,10 +129,10 @@ mod test {
     #[test]
     fn test_parse_abstraction() {
         let result = parse_abstraction(&mut Lexer::new("\\x y. x"));
-        let expected = Ok(ast::AbstractionExpression::new(
-            vec![ast::Identifier::new("x"), ast::Identifier::new("y")],
-            ast::Expression::from(ast::ApplicationExpression::new(vec![
-                ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("x"))),
+        let expected = Ok(cst::AbstractionExpression::new(
+            vec![cst::Identifier::new("x"), cst::Identifier::new("y")],
+            cst::Expression::from(cst::ApplicationExpression::new(vec![
+                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("x"))),
             ])),
         ));
         assert_eq!(expected, result);
@@ -140,10 +141,10 @@ mod test {
     #[test]
     fn test_parse_application() {
         let result = parse_application(&mut Lexer::new("x y z"));
-        let expected = Ok(ast::ApplicationExpression::new(vec![
-            ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("x"))),
-            ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("y"))),
-            ast::Expression::from(ast::VariableExpression::new(ast::Identifier::new("z"))),
+        let expected = Ok(cst::ApplicationExpression::new(vec![
+            cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("x"))),
+            cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("y"))),
+            cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("z"))),
         ]));
         assert_eq!(expected, result);
     }
@@ -152,9 +153,9 @@ mod test {
     fn test_parse_paratemers() {
         let result = parse_parameters(&mut Lexer::new("x y z"));
         let expected = Ok(vec![
-            ast::Identifier::new("x"),
-            ast::Identifier::new("y"),
-            ast::Identifier::new("z"),
+            cst::Identifier::new("x"),
+            cst::Identifier::new("y"),
+            cst::Identifier::new("z"),
         ]);
         assert_eq!(expected, result);
     }
@@ -162,10 +163,10 @@ mod test {
     #[test]
     fn test_parse_let() {
         let result = parse_let(&mut Lexer::new("let x = y"));
-        let expected = Ok(ast::LetStatement::new(
-            ast::Identifier::new("x"),
-            ast::ApplicationExpression::new(vec![ast::Expression::from(
-                ast::VariableExpression::new(ast::Identifier::new("y")),
+        let expected = Ok(cst::LetStatement::new(
+            cst::Identifier::new("x"),
+            cst::ApplicationExpression::new(vec![cst::Expression::from(
+                cst::VariableExpression::new(cst::Identifier::new("y")),
             )]),
         ));
         assert_eq!(expected, result);

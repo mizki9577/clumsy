@@ -1,4 +1,4 @@
-use ast::Identifier;
+use cst::Identifier;
 
 #[derive(Debug, PartialEq)]
 pub struct VariableExpression {

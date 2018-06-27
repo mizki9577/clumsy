@@ -1,5 +1,5 @@
-use ast;
-use expression::Expression;
+use ast::Expression;
+use cst;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -64,8 +64,8 @@ impl Application {
     }
 }
 
-impl<'a> From<&'a ast::ApplicationExpression> for Expression {
-    fn from(value: &ast::ApplicationExpression) -> Expression {
+impl<'a> From<&'a cst::ApplicationExpression> for Expression {
+    fn from(value: &cst::ApplicationExpression) -> Expression {
         let mut iter = value.expressions.iter();
         let callee = iter.next().unwrap();
 

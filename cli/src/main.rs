@@ -74,8 +74,8 @@ fn repl(history: &Option<PathBuf>) {
 
 fn eval(source: &str) {
     let tokens = &mut Lexer::new(source);
-    match parser::parse(tokens).map(|ast| {
-        let expression = Expression::from(&ast);
+    match parser::parse(tokens).map(|cst| {
+        let expression = Expression::from(&cst);
         expression.evaluate()
     }) {
         Ok(result) => println!("{}", result),

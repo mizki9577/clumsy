@@ -1,4 +1,4 @@
-use ast::{Expression, Identifier};
+use cst::{Expression, Identifier};
 
 #[derive(Debug, PartialEq)]
 pub struct LetStatement {

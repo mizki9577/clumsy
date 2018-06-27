@@ -1,5 +1,5 @@
-use ast;
-use expression::{Application, Expression, Variable};
+use ast::{Application, Expression, Variable};
+use cst;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -54,23 +54,23 @@ impl Abstraction {
     }
 }
 
-impl<'a> From<&'a ast::AbstractionExpression> for Abstraction {
-    fn from(value: &ast::AbstractionExpression) -> Abstraction {
+impl<'a> From<&'a cst::AbstractionExpression> for Abstraction {
+    fn from(value: &cst::AbstractionExpression) -> Abstraction {
         let mut iter = value.parameters.iter();
-        let ast::Identifier(parameter) = iter.next_back().unwrap();
+        let cst::Identifier(parameter) = iter.next_back().unwrap();
 
         iter.rfold(
             Abstraction::new(parameter.as_str(), &*value.expression),
-            |body, ast::Identifier(parameter)| {
+            |body, cst::Identifier(parameter)| {
                 Abstraction::new(parameter.as_str(), Expression::Abstraction(body))
             },
         )
     }
 }
 
-impl<'a> From<&'a ast::Number> for Abstraction {
-    fn from(value: &ast::Number) -> Abstraction {
-        let ast::Number(value) = value;
+impl<'a> From<&'a cst::Number> for Abstraction {
+    fn from(value: &cst::Number) -> Abstraction {
+        let cst::Number(value) = value;
         let mut n = value.parse::<usize>().unwrap(); // TODO: handle this
         let mut result = Expression::Variable(Variable::new(0, "x"));
 

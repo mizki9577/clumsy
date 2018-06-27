@@ -4,7 +4,7 @@ mod variable;
 pub use self::abstraction::*;
 pub use self::application::*;
 pub use self::variable::*;
-use ast::Number;
+use cst::Number;
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {

@@ -1,4 +1,4 @@
-use ast::Expression;
+use cst::Expression;
 
 #[derive(Debug, PartialEq)]
 pub struct ApplicationExpression {
