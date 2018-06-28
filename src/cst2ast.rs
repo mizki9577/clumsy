@@ -113,13 +113,12 @@ impl<'a> From<&'a ApplicationExpression> for Expression {
 #[cfg(test)]
 mod test {
     use super::*;
-    use cst;
 
     #[test]
     fn translate_abstraction() {
-        let result = Expression::from(&cst::Expression::from(cst::AbstractionExpression::new(
-            vec![cst::Identifier::new("x"), cst::Identifier::new("x")],
-            cst::VariableExpression::new(cst::Identifier::new("x")),
+        let result = Expression::from(&CSTExpression::from(AbstractionExpression::new(
+            vec![Identifier::new("x"), Identifier::new("x")],
+            VariableExpression::new(Identifier::new("x")),
         )));
 
         let expected = Expression::Abstraction(Abstraction::new(
@@ -131,14 +130,14 @@ mod test {
         ));
         assert_eq!(expected, result);
 
-        let b = Expression::from(&cst::Expression::from(cst::AbstractionExpression::new(
-            vec![cst::Identifier::new("x")],
-            cst::ApplicationExpression::new(vec![
-                cst::Expression::from(cst::AbstractionExpression::new(
-                    vec![cst::Identifier::new("x")],
-                    cst::VariableExpression::new(cst::Identifier::new("x")),
+        let b = Expression::from(&CSTExpression::from(AbstractionExpression::new(
+            vec![Identifier::new("x")],
+            ApplicationExpression::new(vec![
+                CSTExpression::from(AbstractionExpression::new(
+                    vec![Identifier::new("x")],
+                    VariableExpression::new(Identifier::new("x")),
                 )),
-                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("x"))),
+                CSTExpression::from(VariableExpression::new(Identifier::new("x"))),
             ]),
         )));
         let expected = Expression::Abstraction(Abstraction::new(
@@ -156,13 +155,11 @@ mod test {
 
     #[test]
     fn translate_application() {
-        let a = Expression::from(&cst::Expression::from(cst::ApplicationExpression::new(
-            vec![
-                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("a"))),
-                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("b"))),
-                cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new("c"))),
-            ],
-        )));
+        let a = Expression::from(&CSTExpression::from(ApplicationExpression::new(vec![
+            CSTExpression::from(VariableExpression::new(Identifier::new("a"))),
+            CSTExpression::from(VariableExpression::new(Identifier::new("b"))),
+            CSTExpression::from(VariableExpression::new(Identifier::new("c"))),
+        ])));
         let expected = Expression::Application(Application::new(
             Expression::Application(Application::new(
                 Expression::Variable(Variable::new(None, "a")),
@@ -185,20 +182,18 @@ mod test {
                 Expression::Variable(Variable::new(0, "x")),
             )),
         ));
-        let result = Expression::from(&cst::Program(vec![
-            cst::Statement::from(cst::LetStatement::new(
-                cst::Identifier::new("id"),
-                cst::Expression::from(cst::AbstractionExpression::new(
-                    vec![cst::Identifier::new("x")],
-                    cst::Expression::from(cst::ApplicationExpression::new(vec![
-                        cst::Expression::from(cst::VariableExpression::new(cst::Identifier::new(
-                            "x",
-                        ))),
-                    ])),
+        let result = Expression::from(&Program(vec![
+            Statement::from(LetStatement::new(
+                Identifier::new("id"),
+                CSTExpression::from(AbstractionExpression::new(
+                    vec![Identifier::new("x")],
+                    CSTExpression::from(ApplicationExpression::new(vec![CSTExpression::from(
+                        VariableExpression::new(Identifier::new("x")),
+                    )])),
                 )),
             )),
-            cst::Statement::from(cst::ExpressionStatement::new(cst::Expression::from(
-                cst::VariableExpression::new(cst::Identifier::new("id")),
+            Statement::from(ExpressionStatement::new(CSTExpression::from(
+                VariableExpression::new(Identifier::new("id")),
             ))),
         ]));
         assert_eq!(expected, result);
