@@ -1,4 +1,7 @@
+**/target/
+**/.cargo/
 **/*.rs.bk
+
 /Cargo.lock
+
 Session.vim
-/target/
