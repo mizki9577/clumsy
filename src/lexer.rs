@@ -119,10 +119,14 @@ impl<'a> Iterator for Lexer<'a> {
                     }
                 }
 
-                LexerState::Character(None) => match self.source_next() {
-                    Some('\'') => LexerState::Return(Some(TokenKind::InvalidCharacter('\''))),
-                    Some(character) => LexerState::Character(Some(character)),
-                    None => LexerState::Return(None),
+                LexerState::Character(None) => match self.source.peek() {
+                    Some('\'') | None => {
+                        LexerState::Return(Some(TokenKind::InvalidCharacter('\'')))
+                    }
+                    Some(&character) => {
+                        self.source_next();
+                        LexerState::Character(Some(character))
+                    }
                 },
 
                 LexerState::Character(Some(character)) => match self.source_next() {
@@ -144,7 +148,7 @@ mod test {
     #[test]
     fn lexer_test() {
         let lexer = Lexer::new("(\\foo\nbarBaz_2000'*'//@@@@\n.)42^");
-        let results = vec![
+        let expecteds = vec![
             Token::new(TokenKind::LeftBracket, 0, 0),
             Token::new(TokenKind::Lambda, 0, 1),
             Token::new(TokenKind::Identifier("foo".to_owned()), 0, 4),
@@ -156,7 +160,17 @@ mod test {
             Token::new(TokenKind::InvalidCharacter('^'), 2, 4),
         ].into_iter();
 
-        for (expected, result) in lexer.zip(results) {
+        for (result, expected) in lexer.zip(expecteds) {
+            assert_eq!(expected, result);
+        }
+
+        let lexer = Lexer::new("''");
+        let expecteds = vec![
+            Token::new(TokenKind::InvalidCharacter('\''), 0, 0),
+            Token::new(TokenKind::InvalidCharacter('\''), 0, 1),
+        ].into_iter();
+
+        for (result, expected) in lexer.zip(expecteds) {
             assert_eq!(expected, result);
         }
     }

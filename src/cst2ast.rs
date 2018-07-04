@@ -1,7 +1,7 @@
 use ast::{Abstraction, Application, Expression, Variable};
 use cst::{
-    AbstractionExpression, ApplicationExpression, Expression as CSTExpression, ExpressionStatement,
-    Identifier, LetStatement, Number, Program, Statement, VariableExpression,
+    AbstractionExpression, ApplicationExpression, Character, Expression as CSTExpression,
+    ExpressionStatement, Identifier, LetStatement, Number, Program, Statement, VariableExpression,
 };
 use std::collections::HashMap;
 
@@ -19,6 +19,10 @@ impl<'a> From<&'a CSTExpression> for Expression {
             CSTExpression::Application(application) => Expression::from(application),
 
             CSTExpression::Number(number) => Expression::Abstraction(Abstraction::from(number)),
+
+            CSTExpression::Character(character) => {
+                Expression::Abstraction(Abstraction::from(character))
+            }
         };
 
         result.assign_indices(&mut HashMap::new());
@@ -80,6 +84,24 @@ impl<'a> From<&'a Number> for Abstraction {
     fn from(value: &Number) -> Abstraction {
         let Number(value) = value;
         let mut n = value.parse::<usize>().unwrap(); // TODO: handle this
+        let mut result = Expression::Variable(Variable::new(0, "x"));
+
+        while n > 0 {
+            result = Expression::Application(Application::new(
+                Expression::Variable(Variable::new(1, "f")),
+                result,
+            ));
+            n -= 1;
+        }
+
+        Abstraction::new("f", Expression::Abstraction(Abstraction::new("x", result)))
+    }
+}
+
+impl<'a> From<&'a Character> for Abstraction {
+    fn from(value: &Character) -> Abstraction {
+        let Character(value) = value;
+        let mut n = *value as u32;
         let mut result = Expression::Variable(Variable::new(0, "x"));
 
         while n > 0 {

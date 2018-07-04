@@ -28,3 +28,15 @@ impl Number {
         Number(value.into())
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub struct Character(pub char);
+
+impl Character {
+    pub fn new<T>(value: T) -> Character
+    where
+        T: Into<char>,
+    {
+        Character(value.into())
+    }
+}

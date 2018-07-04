@@ -1,6 +1,6 @@
 use cst::{
-    AbstractionExpression, ApplicationExpression, Expression, ExpressionStatement, Identifier,
-    LetStatement, Number, Program, Statement, VariableExpression,
+    AbstractionExpression, ApplicationExpression, Character, Expression, ExpressionStatement,
+    Identifier, LetStatement, Number, Program, Statement, VariableExpression,
 };
 use lexer::Lexer;
 use std::iter::Peekable;
@@ -31,7 +31,8 @@ pub fn parse(lexer: &mut Peekable<Lexer>) -> Result<Program> {
     | Some(TokenKind::LeftBracket)
     | Some(TokenKind::Let)
     | Some(TokenKind::Identifier(..))
-    | Some(TokenKind::Number(..)) =
+    | Some(TokenKind::Number(..))
+    | Some(TokenKind::Character(..)) =
         lexer.peek().unwrap_or_else(|| panic!(UNEXPECTED_NONE)).kind
     {
         statements.push(parse_statement(lexer)?)
@@ -47,7 +48,8 @@ fn parse_statement(lexer: &mut Peekable<Lexer>) -> Result<Statement> {
         Some(TokenKind::Lambda)
         | Some(TokenKind::LeftBracket)
         | Some(TokenKind::Identifier(..))
-        | Some(TokenKind::Number(..)) => {
+        | Some(TokenKind::Number(..))
+        | Some(TokenKind::Character(..)) => {
             Statement::from(ExpressionStatement::new(parse_expression(lexer)?))
         }
 
@@ -71,6 +73,7 @@ pub fn parse_expression(lexer: &mut Peekable<Lexer>) -> Result<Expression> {
         Some(TokenKind::Lambda) => Ok(Expression::from(parse_abstraction(lexer)?)),
         Some(TokenKind::LeftBracket)
         | Some(TokenKind::Identifier(..))
+        | Some(TokenKind::Character(..))
         | Some(TokenKind::Number(..)) => Ok(Expression::from(parse_application(lexer)?)),
         _ => Err(format!("Expected '\\', '(' or identifier, found {}", token)),
     }
@@ -104,6 +107,8 @@ fn parse_application(lexer: &mut Peekable<Lexer>) -> Result<ApplicationExpressio
                 }
 
                 Some(TokenKind::Number(..)) => Expression::from(parse_number(lexer)?),
+
+                Some(TokenKind::Character(..)) => Expression::from(parse_character(lexer)?),
 
                 Some(TokenKind::LeftBracket) => {
                     expect(lexer, &TokenKind::LeftBracket)?;
@@ -144,6 +149,15 @@ fn parse_number(lexer: &mut Peekable<Lexer>) -> Result<Number> {
     match token.kind {
         Some(TokenKind::Number(number)) => Ok(Number::new(number.as_str())),
         _ => Err(format!("Expected number, found {}", token)),
+    }
+}
+
+fn parse_character(lexer: &mut Peekable<Lexer>) -> Result<Character> {
+    let token = lexer.next().unwrap_or_else(|| panic!(UNEXPECTED_NONE));
+
+    match token.kind {
+        Some(TokenKind::Character(character)) => Ok(Character::new(character)),
+        _ => Err(format!("Expected character, found {}", token)),
     }
 }
 
