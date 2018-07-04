@@ -1,18 +1,17 @@
 use std::iter::Peekable;
 use std::str::Chars;
-use token::{Token, TokenType};
+use token::{Token, TokenKind};
 
 pub struct Lexer<'a> {
     source: Peekable<Chars<'a>>,
     line: usize,
     column: usize,
     state: LexerState,
-    peeked: Option<Token>,
 }
 
 enum LexerState {
     Initial,
-    Return(Option<TokenType>),
+    Return(Option<TokenKind>),
     Word(Option<String>),
     Whitespace,
     FirstSlash,
@@ -22,30 +21,39 @@ enum LexerState {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(source: &'a str) -> Lexer<'a> {
+    pub fn new(source: &'a str) -> Peekable<Lexer<'a>> {
         Lexer {
             source: source.chars().peekable(),
             line: 0,
             column: 0,
             state: LexerState::Initial,
-            peeked: None,
-        }
+        }.peekable()
     }
 
-    pub fn next(&mut self) -> Token {
-        if self.peeked.is_some() {
-            return self.peeked.take().unwrap();
+    fn source_next(&mut self) -> Option<char> {
+        if let Some('\n') = self.source.peek() {
+            self.line += 1;
+            self.column = 0;
+        } else {
+            self.column += 1;
         }
+        self.source.next()
+    }
+}
 
+impl<'a> Iterator for Lexer<'a> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Token> {
         loop {
             self.state = match self.state {
                 LexerState::Initial => match self.source_next() {
-                    Some('(') => LexerState::Return(Some(TokenType::LeftBracket)),
-                    Some(')') => LexerState::Return(Some(TokenType::RightBracket)),
-                    Some('\\') => LexerState::Return(Some(TokenType::Lambda)),
-                    Some('.') => LexerState::Return(Some(TokenType::Dot)),
-                    Some('=') => LexerState::Return(Some(TokenType::Equal)),
-                    Some(';') => LexerState::Return(Some(TokenType::Semicolon)),
+                    Some('(') => LexerState::Return(Some(TokenKind::LeftBracket)),
+                    Some(')') => LexerState::Return(Some(TokenKind::RightBracket)),
+                    Some('\\') => LexerState::Return(Some(TokenKind::Lambda)),
+                    Some('.') => LexerState::Return(Some(TokenKind::Dot)),
+                    Some('=') => LexerState::Return(Some(TokenKind::Equal)),
+                    Some(';') => LexerState::Return(Some(TokenKind::Semicolon)),
                     Some('/') => LexerState::FirstSlash,
                     Some(c) if c.is_ascii_whitespace() => LexerState::Whitespace,
                     Some(c) if c.is_ascii_alphabetic() || c == '_' => {
@@ -53,14 +61,14 @@ impl<'a> Lexer<'a> {
                     }
                     Some('\'') => LexerState::Character(None),
                     Some(c) if c.is_ascii_digit() => LexerState::Number(Some(c.to_string())),
-                    Some(c) => LexerState::Return(Some(TokenType::InvalidCharacter(c))),
-                    None => LexerState::Return(Some(TokenType::EOF)),
+                    Some(c) => LexerState::Return(Some(TokenKind::InvalidCharacter(c))),
+                    None => LexerState::Return(None),
                 },
 
-                LexerState::Return(ref mut token_type) => {
-                    let token_type = token_type.take().unwrap();
+                LexerState::Return(ref mut kind) => {
+                    let kind = kind.take();
                     self.state = LexerState::Initial;
-                    return Token::new(token_type, self.line, self.column - 1);
+                    return Some(Token::new(kind, self.line, self.column - 1));
                 }
 
                 LexerState::Word(ref mut word) => {
@@ -73,9 +81,9 @@ impl<'a> Lexer<'a> {
                         }
 
                         _ => LexerState::Return(Some(if word == "let" {
-                            TokenType::Let
+                            TokenKind::Let
                         } else {
-                            TokenType::Identifier(word)
+                            TokenKind::Identifier(word)
                         })),
                     }
                 }
@@ -90,7 +98,7 @@ impl<'a> Lexer<'a> {
 
                 LexerState::FirstSlash => match self.source.peek() {
                     Some('/') => LexerState::Comment,
-                    _ => LexerState::Return(Some(TokenType::InvalidCharacter('/'))),
+                    _ => LexerState::Return(Some(TokenKind::InvalidCharacter('/'))),
                 },
 
                 LexerState::Comment => match self.source_next() {
@@ -107,47 +115,25 @@ impl<'a> Lexer<'a> {
                             LexerState::Number(Some(number))
                         }
 
-                        _ => LexerState::Return(Some(TokenType::Number(number))),
+                        _ => LexerState::Return(Some(TokenKind::Number(number))),
                     }
                 }
 
                 LexerState::Character(None) => match self.source_next() {
-                    Some('\'') => LexerState::Return(Some(TokenType::InvalidCharacter('\''))),
+                    Some('\'') => LexerState::Return(Some(TokenKind::InvalidCharacter('\''))),
                     Some(character) => LexerState::Character(Some(character)),
-                    None => LexerState::Return(Some(TokenType::EOF)),
+                    None => LexerState::Return(None),
                 },
 
                 LexerState::Character(Some(character)) => match self.source_next() {
-                    Some('\'') => LexerState::Return(Some(TokenType::Character(character))),
+                    Some('\'') => LexerState::Return(Some(TokenKind::Character(character))),
                     Some(character) => {
-                        LexerState::Return(Some(TokenType::InvalidCharacter(character)))
+                        LexerState::Return(Some(TokenKind::InvalidCharacter(character)))
                     }
-                    None => LexerState::Return(Some(TokenType::EOF)),
+                    None => LexerState::Return(None),
                 },
             }
         }
-    }
-
-    pub fn peek(&mut self) -> &Token {
-        if self.peeked.is_none() {
-            self.peeked = Some(self.next());
-        }
-
-        if let Some(ref peeked) = self.peeked {
-            peeked
-        } else {
-            unreachable!();
-        }
-    }
-
-    fn source_next(&mut self) -> Option<char> {
-        if let Some('\n') = self.source.peek() {
-            self.line += 1;
-            self.column = 0;
-        } else {
-            self.column += 1;
-        }
-        self.source.next()
     }
 }
 
@@ -157,24 +143,20 @@ mod test {
 
     #[test]
     fn lexer_test() {
-        let mut lexer = Lexer::new("(\\foo\nbarBaz_2000'*'//@@@@\n.)42^");
-        let mut results = vec![
-            Token::new(TokenType::LeftBracket, 0, 0),
-            Token::new(TokenType::Lambda, 0, 1),
-            Token::new(TokenType::Identifier("foo".to_owned()), 0, 4),
-            Token::new(TokenType::Identifier("barBaz_2000".to_owned()), 1, 10),
-            Token::new(TokenType::Character('*'), 1, 13),
-            Token::new(TokenType::Dot, 2, 0),
-            Token::new(TokenType::RightBracket, 2, 1),
-            Token::new(TokenType::Number("42".to_owned()), 2, 3),
-            Token::new(TokenType::InvalidCharacter('^'), 2, 4),
+        let lexer = Lexer::new("(\\foo\nbarBaz_2000'*'//@@@@\n.)42^");
+        let results = vec![
+            Token::new(TokenKind::LeftBracket, 0, 0),
+            Token::new(TokenKind::Lambda, 0, 1),
+            Token::new(TokenKind::Identifier("foo".to_owned()), 0, 4),
+            Token::new(TokenKind::Identifier("barBaz_2000".to_owned()), 1, 10),
+            Token::new(TokenKind::Character('*'), 1, 13),
+            Token::new(TokenKind::Dot, 2, 0),
+            Token::new(TokenKind::RightBracket, 2, 1),
+            Token::new(TokenKind::Number("42".to_owned()), 2, 3),
+            Token::new(TokenKind::InvalidCharacter('^'), 2, 4),
         ].into_iter();
-        loop {
-            let expected = lexer.next();
-            if expected.get_type() == &TokenType::EOF {
-                break;
-            }
-            let result = results.next().unwrap();
+
+        for (expected, result) in lexer.zip(results) {
             assert_eq!(expected, result);
         }
     }
