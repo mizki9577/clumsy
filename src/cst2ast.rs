@@ -1,4 +1,4 @@
-use ast::{Abstraction, Application, Expression, Variable};
+use ast::Expression;
 use cst::{Character, ExpressionStatement, Identifier, LetStatement, Number, Program, Statement};
 
 impl<'a> From<&'a Program> for Expression {
@@ -31,51 +31,58 @@ impl<'a> From<&'a Program> for Expression {
             Expression::from_cst(result, &mut scopes),
             |result, statement| match statement {
                 Statement::Expression(..) => unimplemented!(),
-                Statement::Let(LetStatement {
-                    variable: Identifier(variable),
-                    expression,
-                }) => Expression::Application(Application::new(
-                    Expression::Abstraction(Abstraction::new(variable.to_owned(), result)),
-                    Expression::from_cst(expression, &mut Vec::new()),
-                )),
+                Statement::Let(LetStatement { expression, .. }) => Expression::Application {
+                    applicand: box Expression::Abstraction {
+                        expression: box result,
+                    },
+                    argument: box Expression::from_cst(expression, &mut Vec::new()),
+                },
             },
         )
     }
 }
 
-impl<'a> From<&'a Number> for Abstraction {
-    fn from(value: &Number) -> Abstraction {
+impl<'a> From<&'a Number> for Expression {
+    fn from(value: &Number) -> Expression {
         let Number(value) = value;
         let mut n = value.parse::<usize>().unwrap(); // TODO: handle this
-        let mut result = Expression::Variable(Variable::new(0, "x"));
+        let mut result = Expression::Variable { index: Some(0) };
 
         while n > 0 {
-            result = Expression::Application(Application::new(
-                Expression::Variable(Variable::new(1, "f")),
-                result,
-            ));
+            result = Expression::Application {
+                applicand: box Expression::Variable { index: Some(1) },
+                argument: box result,
+            };
             n -= 1;
         }
 
-        Abstraction::new("f", Expression::Abstraction(Abstraction::new("x", result)))
+        Expression::Abstraction {
+            expression: box Expression::Abstraction {
+                expression: box result,
+            },
+        }
     }
 }
 
-impl<'a> From<&'a Character> for Abstraction {
-    fn from(value: &Character) -> Abstraction {
+impl<'a> From<&'a Character> for Expression {
+    fn from(value: &Character) -> Expression {
         let Character(value) = value;
         let mut n = *value as u32;
-        let mut result = Expression::Variable(Variable::new(0, "x"));
+        let mut result = Expression::Variable { index: Some(0) };
 
         while n > 0 {
-            result = Expression::Application(Application::new(
-                Expression::Variable(Variable::new(1, "f")),
-                result,
-            ));
+            result = Expression::Application {
+                applicand: box Expression::Variable { index: Some(1) },
+                argument: box result,
+            };
             n -= 1;
         }
 
-        Abstraction::new("f", Expression::Abstraction(Abstraction::new("x", result)))
+        Expression::Abstraction {
+            expression: box Expression::Abstraction {
+                expression: box result,
+            },
+        }
     }
 }
 
@@ -97,13 +104,11 @@ mod test {
             &mut Vec::new(),
         );
 
-        let expected = Expression::Abstraction(Abstraction::new(
-            "x",
-            Expression::Abstraction(Abstraction::new(
-                "x",
-                Expression::Variable(Variable::new(Some(0), "x")),
-            )),
-        ));
+        let expected = Expression::Abstraction {
+            expression: box Expression::Abstraction {
+                expression: box Expression::Variable { index: Some(0) },
+            },
+        };
         assert_eq!(expected, result);
 
         let b = Expression::from_cst(
@@ -119,16 +124,14 @@ mod test {
             )),
             &mut Vec::new(),
         );
-        let expected = Expression::Abstraction(Abstraction::new(
-            "x",
-            Expression::Application(Application::new(
-                Expression::Abstraction(Abstraction::new(
-                    "x",
-                    Expression::Variable(Variable::new(Some(0), "x")),
-                )),
-                Expression::Variable(Variable::new(Some(0), "x")),
-            )),
-        ));
+        let expected = Expression::Abstraction {
+            expression: box Expression::Application {
+                applicand: box Expression::Abstraction {
+                    expression: box Expression::Variable { index: Some(0) },
+                },
+                argument: box Expression::Variable { index: Some(0) },
+            },
+        };
         assert_eq!(expected, b);
     }
 
@@ -142,28 +145,26 @@ mod test {
             ])),
             &mut Vec::new(),
         );
-        let expected = Expression::Application(Application::new(
-            Expression::Application(Application::new(
-                Expression::Variable(Variable::new(None, "a")),
-                Expression::Variable(Variable::new(None, "b")),
-            )),
-            Expression::Variable(Variable::new(None, "c")),
-        ));
+        let expected = Expression::Application {
+            applicand: box Expression::Application {
+                applicand: box Expression::Variable { index: None },
+                argument: box Expression::Variable { index: None },
+            },
+            argument: box Expression::Variable { index: None },
+        };
         assert_eq!(expected, a);
     }
 
     #[test]
     fn translate_let_statement() {
-        let expected = Expression::Application(Application::new(
-            Expression::Abstraction(Abstraction::new(
-                "id",
-                Expression::Variable(Variable::new(0, "id")),
-            )),
-            Expression::Abstraction(Abstraction::new(
-                "x",
-                Expression::Variable(Variable::new(0, "x")),
-            )),
-        ));
+        let expected = Expression::Application {
+            applicand: box Expression::Abstraction {
+                expression: box Expression::Variable { index: Some(0) },
+            },
+            argument: box Expression::Abstraction {
+                expression: box Expression::Variable { index: Some(0) },
+            },
+        };
         let result = Expression::from(&Program(vec![
             Statement::from(LetStatement::new(
                 Identifier::new("id"),
