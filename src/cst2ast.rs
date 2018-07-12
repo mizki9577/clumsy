@@ -8,9 +8,7 @@ use std::collections::HashMap;
 impl<'a> From<&'a CSTExpression> for Expression {
     fn from(value: &CSTExpression) -> Expression {
         let mut result = match value {
-            CSTExpression::Variable(VariableExpression { identifier }) => {
-                Expression::Variable(Variable::from(identifier))
-            }
+            CSTExpression::Variable(variable) => Expression::Variable(Variable::from(variable)),
 
             CSTExpression::Abstraction(abstraction) => {
                 Expression::Abstraction(Abstraction::from(abstraction))
@@ -59,9 +57,11 @@ impl<'a> From<&'a Program> for Expression {
     }
 }
 
-impl<'a> From<&'a Identifier> for Variable {
-    fn from(value: &Identifier) -> Variable {
-        let Identifier(identifier) = value;
+impl<'a> From<&'a VariableExpression> for Variable {
+    fn from(value: &VariableExpression) -> Variable {
+        let VariableExpression {
+            identifier: Identifier(identifier),
+        } = value;
         Variable::new(None, identifier.as_str())
     }
 }
