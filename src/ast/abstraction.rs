@@ -1,5 +1,5 @@
 use ast::Expression;
-use std::collections::HashMap;
+use cst::{AbstractionExpression, Identifier};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
@@ -21,18 +21,32 @@ impl Abstraction {
         }
     }
 
-    pub fn assign_indices<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
-        let outer = table.get(self.name.as_str()).cloned();
-        table.iter_mut().for_each(|(_, i)| *i += 1);
-        table.insert(&self.name, 0);
+    pub fn from_cst<'a>(
+        value: &'a AbstractionExpression,
+        scopes: &mut Vec<&'a str>,
+    ) -> Abstraction {
+        let mut iter = value.parameters.iter();
+        let Identifier(parameter) = iter.next_back().unwrap();
 
-        self.expression.assign_indices(table);
-
-        table.remove(self.name.as_str());
-        table.iter_mut().for_each(|(_, i)| *i -= 1);
-        if let Some(i) = outer {
-            table.insert(&self.name, i);
+        for Identifier(parameter) in &value.parameters {
+            scopes.push(parameter);
         }
+
+        let result = iter.rfold(
+            Abstraction::new(
+                parameter.as_str(),
+                Expression::from_cst(&*value.expression, scopes),
+            ),
+            |body, Identifier(parameter)| {
+                Abstraction::new(parameter.as_str(), Expression::Abstraction(body))
+            },
+        );
+
+        for _ in &value.parameters {
+            scopes.pop();
+        }
+
+        result
     }
 
     pub fn applied(self, argument: Expression) -> Expression {

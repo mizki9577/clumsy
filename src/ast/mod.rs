@@ -5,7 +5,7 @@ pub use self::abstraction::*;
 pub use self::application::*;
 pub use self::variable::*;
 
-use std::collections::HashMap;
+use cst::Expression as CSTExpression;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
@@ -17,11 +17,31 @@ pub enum Expression {
 }
 
 impl Expression {
-    pub fn assign_indices<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
-        match self {
-            Expression::Variable(variable) => variable.assign_indices(table),
-            Expression::Abstraction(abstraction) => abstraction.assign_indices(table),
-            Expression::Application(application) => application.assign_indices(table),
+    pub fn from_cst<'a>(value: &'a CSTExpression, scopes: &mut Vec<&'a str>) -> Expression {
+        match value {
+            CSTExpression::Variable(variable) => {
+                Expression::Variable(Variable::from_cst(variable, scopes))
+            }
+
+            CSTExpression::Abstraction(abstraction) => {
+                Expression::Abstraction(Abstraction::from_cst(abstraction, scopes))
+            }
+
+            CSTExpression::Application(application) => {
+                if application.expressions.len() > 1 {
+                    Expression::Application(Application::from_cst(application, scopes))
+                } else if application.expressions.len() == 1 {
+                    Expression::from_cst(&application.expressions[0], scopes)
+                } else {
+                    panic!()
+                }
+            }
+
+            CSTExpression::Number(number) => Expression::Abstraction(Abstraction::from(number)),
+
+            CSTExpression::Character(character) => {
+                Expression::Abstraction(Abstraction::from(character))
+            }
         }
     }
 

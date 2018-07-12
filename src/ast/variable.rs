@@ -1,5 +1,5 @@
 use ast::Expression;
-use std::collections::HashMap;
+use cst::{Identifier, VariableExpression};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
@@ -21,8 +21,17 @@ impl Variable {
         }
     }
 
-    pub fn assign_indices<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
-        self.index = table.get(self.name.as_str()).cloned();
+    pub fn from_cst(value: &VariableExpression, scopes: &mut Vec<&str>) -> Variable {
+        let VariableExpression {
+            identifier: Identifier(identifier),
+        } = value;
+
+        let index = scopes
+            .iter()
+            .rposition(|variable| variable == identifier)
+            .map(|index| scopes.len() - index - 1);
+
+        Variable::new(index, identifier.as_str())
     }
 
     pub fn shifted(self, d: isize, c: usize) -> Variable {
@@ -30,7 +39,8 @@ impl Variable {
             Variable {
                 index: Some(index),
                 ref name,
-            } if index >= c =>
+            }
+                if index >= c =>
             {
                 Variable::new((index as isize + d) as usize, name.as_str())
             }
@@ -43,7 +53,8 @@ impl Variable {
         match self {
             Variable {
                 index: Some(index), ..
-            } if index == j =>
+            }
+                if index == j =>
             {
                 term
             }

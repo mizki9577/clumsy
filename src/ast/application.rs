@@ -1,5 +1,5 @@
 use ast::Expression;
-use std::collections::HashMap;
+use cst::ApplicationExpression;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
@@ -21,9 +21,25 @@ impl Application {
         }
     }
 
-    pub fn assign_indices<'a>(&'a mut self, table: &mut HashMap<&'a str, usize>) {
-        self.callee.assign_indices(table);
-        self.argument.assign_indices(table);
+    pub fn from_cst<'a>(
+        value: &'a ApplicationExpression,
+        scopes: &mut Vec<&'a str>,
+    ) -> Application {
+        let mut iter = value.expressions.iter();
+        let callee = iter.next().unwrap();
+        let argument = iter.next().unwrap();
+        iter.fold(
+            Application::new(
+                Expression::from_cst(callee, scopes),
+                Expression::from_cst(argument, scopes),
+            ),
+            |callee, argument| {
+                Application::new(
+                    Expression::Application(callee),
+                    Expression::from_cst(argument, scopes),
+                )
+            },
+        )
     }
 
     pub fn evaluate1(self) -> Expression {
