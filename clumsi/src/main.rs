@@ -21,13 +21,26 @@ static RED: Color = Color::Fixed(9);
 #[derive(StructOpt)]
 #[structopt(name = "Clumsy")]
 struct Options {
-    #[structopt(value_name = "file", parse(from_os_str), conflicts_with = "expression")]
+    #[structopt(
+        value_name = "file",
+        parse(from_os_str),
+        conflicts_with = "expression"
+    )]
     program: Option<PathBuf>,
 
-    #[structopt(short = "e", value_name = "expression", conflicts_with = "program")]
+    #[structopt(
+        short = "e",
+        value_name = "expression",
+        conflicts_with = "program"
+    )]
     expression: Option<String>,
 
-    #[structopt(long = "history", value_name = "file", env = "CLUMSY_HISTORY", parse(from_os_str))]
+    #[structopt(
+        long = "history",
+        value_name = "file",
+        env = "CLUMSY_HISTORY",
+        parse(from_os_str)
+    )]
     history: Option<PathBuf>,
 }
 
@@ -75,7 +88,7 @@ fn repl(history: &Option<PathBuf>) {
 fn eval(source: &str) {
     let tokens = &mut Lexer::new(source);
     match parser::parse(tokens).map(|cst| {
-        let expression = Expression::from(&cst);
+        let expression = Expression::from_cst_program(&cst);
         expression.evaluate()
     }) {
         Ok(result) => println!("{}", result),
