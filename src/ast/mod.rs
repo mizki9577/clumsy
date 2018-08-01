@@ -183,18 +183,15 @@ impl Expression {
         match self {
             Expression::Variable { .. } => false,
             Expression::Abstraction { .. } => false,
-            Expression::Application {
-                applicand: box Expression::Variable { .. },
-                ..
-            } => false,
-            Expression::Application {
-                applicand: box Expression::Abstraction { .. },
-                ..
-            } => true,
-            Expression::Application {
-                applicand: box Expression::Application { applicand, .. },
-                ..
-            } => applicand.is_reducible(),
+            Expression::Application { box applicand, .. } => applicand.is_reducible_inner(),
+        }
+    }
+
+    fn is_reducible_inner(&self) -> bool {
+        match self {
+            Expression::Variable { .. } => false,
+            Expression::Abstraction { .. } => true,
+            Expression::Application { box applicand, .. } => applicand.is_reducible_inner(),
         }
     }
 
