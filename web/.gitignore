@@ -6,3 +6,4 @@
 /dist/*.js
 /dist/*.map
 /dist/*.wasm
+/yarn.lock
