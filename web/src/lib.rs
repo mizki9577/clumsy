@@ -1,4 +1,4 @@
-#![feature(proc_macro, wasm_custom_section, wasm_import_module)]
+#![feature(wasm_custom_section, wasm_import_module, use_extern_macros)]
 
 extern crate clumsy;
 extern crate wasm_bindgen;
@@ -11,6 +11,6 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub fn evaluate(source: &str) -> String {
     parser::parse(&mut Lexer::new(source))
-        .map(|ref ast| format!("{}", Expression::from(ast).evaluate()))
+        .map(|ref cst| format!("{}", Expression::from_cst_program(cst).evaluate()))
         .unwrap_or_else(|err| format!("{}", err))
 }
