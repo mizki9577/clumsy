@@ -1,0 +1,30 @@
+// Arithmetic operations
+let add = \m n f x. m f (n f x);
+let pred = \n f x. n (\g h. h (g f)) (\u. x) (\u. u);
+let sub = \m n. n pred m;
+
+// Boolean values
+let true = \x y. x;
+let false = \x y. y;
+
+// Predicates
+let and = \p q. p q p;
+let cond = \p then else. p then else;
+let is_zero = \n. n (\x. false) true;
+let is_less_than_or_equal = \m n. is_zero (sub m n);
+let is_equal = \m n. and (is_less_than_or_equal m n) (is_less_than_or_equal n m);
+
+// Fixed point combinator
+let Y = \f. (\x. f (x x)) (\x. f (x x));
+
+// Fibonacci function
+let fibonacci_impl = \f n.
+    cond (is_less_than_or_equal n 1)
+        n
+        (add (f (pred n)) (f (sub n 2)));
+let fibonacci = Y fibonacci_impl;
+
+// Go!
+is_equal (fibonacci 6) 8;
+
+// vim: set ts=4 sw=4 et:
